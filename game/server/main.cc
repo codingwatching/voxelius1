@@ -20,7 +20,7 @@ static void on_sigint(int)
 
 void server::main(void)
 {
-    spdlog::info("server: game version: {}/{}", GAME_VERSION_STRING, GAME_VERSION_META);
+    spdlog::info("server: game version: {}", GAME_VERSION_STRING);
 
     globals::frametime = 0.0f;
     globals::frametime_avg = 0.0f;

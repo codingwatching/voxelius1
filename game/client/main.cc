@@ -124,7 +124,7 @@ static void on_opengl_message(GLenum source, GLenum type, GLuint id, GLenum seve
 
 void client::main(void)
 {
-    spdlog::info("client: game version: {}/{}", GAME_VERSION_STRING, GAME_VERSION_META);
+    spdlog::info("client: game version: {}", GAME_VERSION_STRING);
 
     glfwSetErrorCallback(&on_glfw_error);
 
@@ -209,7 +209,7 @@ void client::main(void)
 
     motd::init("motds/client.txt");
 
-    const std::string title = fmt::format("Voxelius {}/{}: {}", GAME_VERSION_STRING, GAME_VERSION_META, motd::get());
+    const std::string title = fmt::format("Voxelius {}: {}", GAME_VERSION_STRING, motd::get());
     glfwSetWindowTitle(globals::window, title.c_str());
 
     glDisable(GL_MULTISAMPLE);
