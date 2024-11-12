@@ -1,0 +1,21 @@
+{
+  "default": {
+    "animated": true,
+    "blending": false,
+    "textures": {
+      "default": [
+        "textures/voxels/vtest_F1.png",
+        "textures/voxels/vtest_F2.png",
+        "textures/voxels/vtest_F3.png",
+        "textures/voxels/vtest_F4.png"
+      ]
+    }
+  },
+  "chromakey": {
+    "animated": false,
+    "blending": false,
+    "textures": {
+      "default": ["textures/voxels/chromakey.png"]
+    }
+  }
+}

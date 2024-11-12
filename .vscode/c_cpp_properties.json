@@ -1,0 +1,33 @@
+{
+    "version": 4,
+    "configurations": [
+        {
+            "name": "Voxelius [linux, x86-64]",
+            "cppStandard": "c++17",
+            "cStandard": "c99",
+            "intelliSenseMode": "linux-gcc-x64",
+            "compilerPath": "/usr/bin/g++",
+            "defines": [
+                "GLFW_INCLUDE_NONE", "MINIZ_NO_STDIO",
+                "MINIZ_NO_ZLIB_COMPATIBLE_NAMES",
+                "VGAME_CLIENT"
+            ],
+            "includePath": [
+                "${workspaceFolder}/external/emhash/include",
+                "${workspaceFolder}/external/enet/include",
+                "${workspaceFolder}/external/entt/include",
+                "${workspaceFolder}/external/fastnoiselite/include",
+                "${workspaceFolder}/external/glad/include",
+                "${workspaceFolder}/external/imgui/include",
+                "${workspaceFolder}/external/miniz/include",
+                "${workspaceFolder}/external/parson/include",
+                "${workspaceFolder}/external/physfs/include",
+                "${workspaceFolder}/external/spdlog/include",
+                "${workspaceFolder}/external/stb/include",
+                "${workspaceFolder}/external/thread_pool/include",
+                "${workspaceFolder}",
+                "${default}"
+            ]
+        }
+    ]
+}

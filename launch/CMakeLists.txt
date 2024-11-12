@@ -1,0 +1,23 @@
+if(BUILD_CLIENT)
+    add_executable(vclient "${CMAKE_CURRENT_LIST_DIR}/launch.cc")
+    target_compile_definitions(vclient PUBLIC VGAME_CLIENT)
+    target_include_directories(vclient PUBLIC ${PROJECT_SOURCE_DIR})
+    target_link_libraries(vclient PUBLIC client shared)
+
+    if(WIN32)
+        enable_language(RC)
+        target_sources(vclient PRIVATE "${CMAKE_CURRENT_LIST_DIR}/vclient.rc")
+    endif()
+endif()
+
+if(BUILD_SERVER)
+    add_executable(vserver "${CMAKE_CURRENT_LIST_DIR}/launch.cc")
+    target_compile_definitions(vserver PUBLIC VGAME_SERVER)
+    target_include_directories(vserver PUBLIC ${PROJECT_SOURCE_DIR})
+    target_link_libraries(vserver PUBLIC server shared)
+
+    if(WIN32)
+        enable_language(RC)
+        target_sources(vserver PRIVATE "${CMAKE_CURRENT_LIST_DIR}/vserver.rc")
+    endif()
+endif()
