@@ -1,7 +1,7 @@
 ![](https://github.com/user-attachments/assets/e9db6d1e-411a-457d-b069-be41099d696c)  
 
 [![Itch.io](https://img.shields.io/badge/itch.io-%23FF0B34.svg?style=for-the-badge&logo=Itch.io&logoColor=white)](https://untodesu.itch.io/voxelius)
-![GitHub Repo stars](https://img.shields.io/github/stars/untolabs/voxelius?style=for-the-badge)
+[![GitHub Repo stars](https://img.shields.io/github/stars/untolabs/voxelius?style=for-the-badge)](https://github.com/untolabs/voxelius/stargazers)
 [![GitHub commit activity](https://img.shields.io/github/commit-activity/w/untolabs/voxelius?style=for-the-badge)](https://github.com/untolabs/voxelius/commits)
 [![GitHub Issues](https://img.shields.io/github/issues/untolabs/voxelius?style=for-the-badge)](https://github.com/untolabs/voxelius/issues)
 [![GitHub License](https://img.shields.io/github/license/untolabs/voxelius?style=for-the-badge)](https://github.com/untolabs/voxelius/blob/master/LICENSE)
