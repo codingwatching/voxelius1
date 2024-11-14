@@ -55,6 +55,7 @@
   "settings.value.language": "Язык",
   "settings.value.mouse.enable_raw_input": "Сырой ввод",
   "settings.value.mouse.sensitivity": "Чувствительность",
+  "settings.value.chunk_renderer.depth_sort_chunks": "Сортировка чанков",
 
   "settings.tooltip.view.vertical_fov": "Поле зрения",
   "settings.tooltip.background.enable_3D": "Стилизованные кубы в главном меню",

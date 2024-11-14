@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: BSD-2-Clause
+#include <common/config.hh>
 #include <entt/entity/registry.hpp>
 #include <game/client/chunk_mesher.hh>
 #include <game/client/chunk_quad.hh>
@@ -7,6 +8,7 @@
 #include <game/client/game.hh>
 #include <game/client/globals.hh>
 #include <game/client/outline.hh>
+#include <game/client/settings.hh>
 #include <game/client/skybox.hh>
 #include <game/client/toggles.hh>
 #include <game/client/varied_program.hh>
@@ -21,6 +23,7 @@
 constexpr static unsigned int WORLD_CURVATURE = 0U;
 constexpr static unsigned int WORLD_FOG = 1U;
 
+static bool depth_sort_chunks = true;
 static VariedProgram quad_program = {};
 static std::size_t u_quad_vproj_matrix = {};
 static std::size_t u_quad_world_position = {};
@@ -33,6 +36,9 @@ static GLuint quad_vbo = {};
 
 void chunk_renderer::init(void)
 {
+    Config::add(globals::client_config, "chunk_renderer.depth_sort_chunks", depth_sort_chunks);
+    settings::add_checkbox(5, settings::VIDEO, "chunk_renderer.depth_sort_chunks", depth_sort_chunks, false);
+
     if(!VariedProgram::setup(quad_program, "shaders/chunk_quad.vert", "shaders/chunk_quad.frag")) {
         spdlog::critical("chunk_renderer: quad_program: setup failed");
         std::terminate();
@@ -98,18 +104,20 @@ void chunk_renderer::render(void)
 
     const auto group = globals::registry.group<ChunkComponent>(entt::get<ChunkMeshComponent, ChunkVisibleComponent>);
 
-    // FIXME: speed! sorting every frame doesn't look
-    // like a good idea. Can we store the group elsewhere and
-    // still have all the up-to-date chunk things inside?
-    group.sort([](entt::entity ea, entt::entity eb) {
-        const auto dir_a = globals::registry.get<ChunkComponent>(ea).coord - view::position.chunk;
-        const auto dir_b = globals::registry.get<ChunkComponent>(eb).coord - view::position.chunk;
-        
-        const auto da = dir_a[0] * dir_a[0] + dir_a[1] * dir_a[1] + dir_a[2] * dir_a[2];
-        const auto db = dir_b[0] * dir_b[0] + dir_b[1] * dir_b[1] + dir_b[2] * dir_b[2];
-        
-        return da > db;
-    });
+    if(depth_sort_chunks) {
+        // FIXME: speed! sorting every frame doesn't look
+        // like a good idea. Can we store the group elsewhere and
+        // still have all the up-to-date chunk things inside?
+        group.sort([](entt::entity ea, entt::entity eb) {
+            const auto dir_a = globals::registry.get<ChunkComponent>(ea).coord - view::position.chunk;
+            const auto dir_b = globals::registry.get<ChunkComponent>(eb).coord - view::position.chunk;
+            
+            const auto da = dir_a[0] * dir_a[0] + dir_a[1] * dir_a[1] + dir_a[2] * dir_a[2];
+            const auto db = dir_b[0] * dir_b[0] + dir_b[1] * dir_b[1] + dir_b[2] * dir_b[2];
+            
+            return da > db;
+        });
+    }
 
     for(std::size_t plane_id = 0; plane_id < voxel_atlas::plane_count(); ++plane_id) {
         glActiveTexture(GL_TEXTURE0);
