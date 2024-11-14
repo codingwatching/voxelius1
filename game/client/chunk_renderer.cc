@@ -73,10 +73,6 @@ void chunk_renderer::deinit(void)
 
 void chunk_renderer::render(void)
 {
-    glEnable(GL_CULL_FACE);
-    glCullFace(GL_BACK);
-    glFrontFace(GL_CCW);
-
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
     glLineWidth(1.0f);
@@ -100,7 +96,20 @@ void chunk_renderer::render(void)
     timings[1] = globals::frametime_avg;
     timings[2] = voxel_anims::frame;
 
-    const auto group = globals::registry.group(entt::get<ChunkComponent, ChunkMeshComponent, ChunkVisibleComponent>);
+    const auto group = globals::registry.group<ChunkComponent>(entt::get<ChunkMeshComponent, ChunkVisibleComponent>);
+
+    // FIXME: speed! sorting every frame doesn't look
+    // like a good idea. Can we store the group elsewhere and
+    // still have all the up-to-date chunk things inside?
+    group.sort([](entt::entity ea, entt::entity eb) {
+        const auto dir_a = globals::registry.get<ChunkComponent>(ea).coord - view::position.chunk;
+        const auto dir_b = globals::registry.get<ChunkComponent>(eb).coord - view::position.chunk;
+        
+        const auto da = dir_a[0] * dir_a[0] + dir_a[1] * dir_a[1] + dir_a[2] * dir_a[2];
+        const auto db = dir_b[0] * dir_b[0] + dir_b[1] * dir_b[1] + dir_b[2] * dir_b[2];
+        
+        return da > db;
+    });
 
     for(std::size_t plane_id = 0; plane_id < voxel_atlas::plane_count(); ++plane_id) {
         glActiveTexture(GL_TEXTURE0);
@@ -115,27 +124,67 @@ void chunk_renderer::render(void)
         glUniform1f(quad_program.uniforms[u_quad_view_distance].location, view::max_distance * CHUNK_SIZE);
         glUniform1i(quad_program.uniforms[u_quad_textures].location, 0); // GL_TEXTURE0
 
+        glDisable(GL_BLEND);
+
+        glEnable(GL_CULL_FACE);
+        glCullFace(GL_BACK);
+        glFrontFace(GL_CCW);
+
         for(const auto [entity, chunk, mesh] : group.each()) {
-            if(plane_id >= mesh.quad.size())
+            if(plane_id >= mesh.quad_nb.size())
                 continue;
-            if(!mesh.quad[plane_id].handle)
+            if(!mesh.quad_nb[plane_id].handle)
                 continue;
-            if(!mesh.quad[plane_id].size)
+            if(!mesh.quad_nb[plane_id].size)
                 continue;
+            
 
             const Vec3f wpos = ChunkCoord::to_vec3f(chunk.coord - view::position.chunk);
             glUniform3fv(quad_program.uniforms[u_quad_world_position].location, 1, wpos.data());
 
-            glBindBuffer(GL_ARRAY_BUFFER, mesh.quad[plane_id].handle);
+            glBindBuffer(GL_ARRAY_BUFFER, mesh.quad_nb[plane_id].handle);
 
             glEnableVertexAttribArray(1);
             glVertexAttribDivisor(1, 1);
             glVertexAttribIPointer(1, 2, GL_UNSIGNED_INT, sizeof(ChunkQuad), nullptr);
             
-            glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, mesh.quad[plane_id].size);
+            glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, mesh.quad_nb[plane_id].size);
             
             globals::num_drawcalls += 1;
-            globals::num_triangles += 2 * mesh.quad[plane_id].size;
+            globals::num_triangles += 2 * mesh.quad_nb[plane_id].size;
+        }
+
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); 
+
+        for(const auto [entity, chunk, mesh] : group.each()) {
+            if(plane_id >= mesh.quad_b.size())
+                continue;
+            if(!mesh.quad_b[plane_id].handle)
+                continue;
+            if(!mesh.quad_b[plane_id].size)
+                continue;
+            
+
+            const Vec3f wpos = ChunkCoord::to_vec3f(chunk.coord - view::position.chunk);
+            glUniform3fv(quad_program.uniforms[u_quad_world_position].location, 1, wpos.data());
+
+            glBindBuffer(GL_ARRAY_BUFFER, mesh.quad_b[plane_id].handle);
+
+            glEnableVertexAttribArray(1);
+            glVertexAttribDivisor(1, 1);
+            glVertexAttribIPointer(1, 2, GL_UNSIGNED_INT, sizeof(ChunkQuad), nullptr);
+            
+            glCullFace(GL_FRONT);
+            glFrontFace(GL_CCW);
+            glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, mesh.quad_b[plane_id].size);
+            
+            glCullFace(GL_BACK);
+            glFrontFace(GL_CCW);
+            glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, mesh.quad_b[plane_id].size);
+            
+            globals::num_drawcalls += 2;
+            globals::num_triangles += 4 * mesh.quad_b[plane_id].size;
         }
     }
 

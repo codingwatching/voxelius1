@@ -4,7 +4,8 @@
 #include <vector>
 
 struct ChunkMeshComponent final {
-    std::vector<ChunkVBO> quad {};
+    std::vector<ChunkVBO> quad_nb {};
+    std::vector<ChunkVBO> quad_b {};
 };
 
 namespace chunk_mesher

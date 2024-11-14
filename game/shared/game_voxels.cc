@@ -12,6 +12,7 @@ Voxel game_voxels::vtest_ck = NULL_VOXEL;
 Voxel game_voxels::oak_leaves = NULL_VOXEL;
 Voxel game_voxels::oak_planks = NULL_VOXEL;
 Voxel game_voxels::oak_wood = NULL_VOXEL;
+Voxel game_voxels::glass = NULL_VOXEL;
 
 void game_voxels::populate(void)
 {
@@ -29,4 +30,6 @@ void game_voxels::populate(void)
     game_voxels::oak_leaves = leaves_base + 0;
     game_voxels::oak_planks = planks_base + 0;
     game_voxels::oak_wood = wood_base + 0;
+
+    game_voxels::glass = vdef::create("glass", VoxelType::Cube).add_default_state().build();
 }

@@ -13,6 +13,7 @@ extern Voxel vtest_ck;
 extern Voxel oak_leaves;
 extern Voxel oak_planks;
 extern Voxel oak_wood;
+extern Voxel glass;
 } // namespace game_voxels
 
 namespace game_voxels

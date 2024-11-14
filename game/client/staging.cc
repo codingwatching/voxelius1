@@ -62,6 +62,7 @@ void staging::init_late(void)
     place_voxels.push_back(game_voxels::oak_leaves);
     place_voxels.push_back(game_voxels::oak_planks);
     place_voxels.push_back(game_voxels::oak_wood);
+    place_voxels.push_back(game_voxels::glass);
 }
 
 void staging::deinit(void)

@@ -34,7 +34,8 @@ constexpr static const size_t NUM_CACHED_CPOS = 7;
 
 struct WorkerContext final {
     std::array<VoxelStorage, NUM_CACHED_CPOS> cache {};
-    std::vector<QuadBuilder> quads {};
+    std::vector<QuadBuilder> quads_nb {};
+    std::vector<QuadBuilder> quads_b {};
     std::shared_future<bool> future {};
     bool is_cancelled {};
     ChunkCoord coord {};
@@ -83,7 +84,7 @@ static bool vis_test(WorkerContext *ctx, Voxel voxel, const VoxelInfo *info, con
             // Voxel types that use blending are semi-transparent;
             // this means they're rendered using a different setup
             // and they must have visible faces with opaque voxels
-            return true;
+            return neighbour_info->blending;
         }
     }
 
@@ -115,7 +116,10 @@ static void push_quad_a(WorkerContext *ctx, const VoxelInfo *info, const Vec3f &
 {
     const VoxelFacing facing = get_facing(face, info->type);
     const VoxelTexture &vtex = info->textures[static_cast<std::size_t>(face)];
-    ctx->quads[vtex.cached_plane].push_back(make_chunk_quad(pos, size, facing, vtex.cached_offset, vtex.paths.size()));
+
+    if(info->blending)
+        ctx->quads_b[vtex.cached_plane].push_back(make_chunk_quad(pos, size, facing, vtex.cached_offset, vtex.paths.size()));
+    else ctx->quads_nb[vtex.cached_plane].push_back(make_chunk_quad(pos, size, facing, vtex.cached_offset, vtex.paths.size()));
 }
 
 static void push_quad_v(WorkerContext *ctx, const VoxelInfo *info, const Vec3f &pos, const Vec2f &size, VoxelFace face, std::size_t entropy)
@@ -123,7 +127,10 @@ static void push_quad_v(WorkerContext *ctx, const VoxelInfo *info, const Vec3f &
     const VoxelFacing facing = get_facing(face, info->type);
     const VoxelTexture &vtex = info->textures[static_cast<std::size_t>(face)];
     const std::size_t entropy_mod = entropy % vtex.paths.size();
-    ctx->quads[vtex.cached_plane].push_back(make_chunk_quad(pos, size, facing, vtex.cached_offset + entropy_mod, 0));
+
+    if(info->blending)
+        ctx->quads_b[vtex.cached_plane].push_back(make_chunk_quad(pos, size, facing, vtex.cached_offset + entropy_mod, 0));
+    else ctx->quads_nb[vtex.cached_plane].push_back(make_chunk_quad(pos, size, facing, vtex.cached_offset + entropy_mod, 0));
 }
 
 static void make_cube(WorkerContext *ctx, Voxel voxel, const VoxelInfo *info, const LocalCoord &lpos, VoxelVis vis, std::size_t entropy)
@@ -160,13 +167,15 @@ static void cache_chunk(WorkerContext *ctx, const ChunkCoord &cpos)
 
 static void process(WorkerContext *ctx)
 {
-    ctx->quads.resize(voxel_atlas::plane_count());
+    ctx->quads_nb.resize(voxel_atlas::plane_count());
+    ctx->quads_b.resize(voxel_atlas::plane_count());
 
     const VoxelStorage &voxels = ctx->cache.at(CPOS_ITSELF);
 
     for(std::size_t i = 0; i < CHUNK_VOLUME; ++i) {
         if(ctx->is_cancelled) {
-            ctx->quads.clear();
+            ctx->quads_nb.clear();
+            ctx->quads_b.clear();
             return;
         }
 
@@ -206,15 +215,18 @@ static void process(WorkerContext *ctx)
 
 static void finalize(WorkerContext *ctx, entt::entity entity)
 {
-    bool has_no_submeshes = true;
+    bool has_no_submeshes_b = true;
+    bool has_no_submeshes_nb = true;
     auto &comp = globals::registry.emplace_or_replace<ChunkMeshComponent>(entity);
-    const std::size_t plane_count = ctx->quads.size();
+    const std::size_t plane_count_nb = ctx->quads_nb.size();
+    const std::size_t plane_count_b = ctx->quads_b.size();
 
-    comp.quad.resize(plane_count);
+    comp.quad_nb.resize(plane_count_nb);
+    comp.quad_b.resize(plane_count_b);
 
-    for(std::size_t plane = 0; plane < plane_count; ++plane) {
-        QuadBuilder &builder = ctx->quads[plane];
-        ChunkVBO &buffer = comp.quad[plane];
+    for(std::size_t plane = 0; plane < plane_count_nb; ++plane) {
+        QuadBuilder &builder = ctx->quads_nb[plane];
+        ChunkVBO &buffer = comp.quad_nb[plane];
 
         if(builder.empty()) {
             if(buffer.handle) {
@@ -229,11 +241,32 @@ static void finalize(WorkerContext *ctx, entt::entity entity)
             glBindBuffer(GL_ARRAY_BUFFER, buffer.handle);
             glBufferData(GL_ARRAY_BUFFER, sizeof(ChunkQuad) * builder.size(), builder.data(), GL_STATIC_DRAW);
             buffer.size = builder.size();
-            has_no_submeshes = false;
+            has_no_submeshes_nb = false;
         }        
     }
 
-    if(has_no_submeshes)
+    for(std::size_t plane = 0; plane < plane_count_b; ++plane) {
+        QuadBuilder &builder = ctx->quads_b[plane];
+        ChunkVBO &buffer = comp.quad_b[plane];
+
+        if(builder.empty()) {
+            if(buffer.handle) {
+                glDeleteBuffers(1, &buffer.handle);
+                buffer.handle = 0;
+                buffer.size = 0;
+            }
+        }
+        else {
+            if(!buffer.handle)
+                glGenBuffers(1, &buffer.handle);
+            glBindBuffer(GL_ARRAY_BUFFER, buffer.handle);
+            glBufferData(GL_ARRAY_BUFFER, sizeof(ChunkQuad) * builder.size(), builder.data(), GL_STATIC_DRAW);
+            buffer.size = builder.size();
+            has_no_submeshes_b = false;
+        }        
+    }
+
+    if(has_no_submeshes_b && has_no_submeshes_nb)
         globals::registry.remove<ChunkMeshComponent>(entity);
     else chunk_visibility::update_chunk(entity);
 }
