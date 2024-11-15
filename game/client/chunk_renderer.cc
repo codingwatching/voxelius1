@@ -183,16 +183,10 @@ void chunk_renderer::render(void)
             glVertexAttribDivisor(1, 1);
             glVertexAttribIPointer(1, 2, GL_UNSIGNED_INT, sizeof(ChunkQuad), nullptr);
             
-            glCullFace(GL_FRONT);
-            glFrontFace(GL_CCW);
             glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, mesh.quad_b[plane_id].size);
             
-            glCullFace(GL_BACK);
-            glFrontFace(GL_CCW);
-            glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, mesh.quad_b[plane_id].size);
-            
-            globals::num_drawcalls += 2;
-            globals::num_triangles += 4 * mesh.quad_b[plane_id].size;
+            globals::num_drawcalls += 1;
+            globals::num_triangles += 2 * mesh.quad_b[plane_id].size;
         }
     }
 
