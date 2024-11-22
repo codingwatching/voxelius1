@@ -1,1 +1,1 @@
-Voxelius Server
+A Voxelius Server
