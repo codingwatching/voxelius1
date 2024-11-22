@@ -76,7 +76,7 @@ static void parse_hostname(ServerStatusItem *item, const std::string &hostname)
     if(!parts[0].empty())
         item->peer_host = parts[0];
     else item->peer_host = std::string("localhost");
-    
+
     if(parts.size() >= 2)
         item->peer_port = cxpr::clamp<std::uint16_t>(strtoul(parts[1].c_str(), nullptr, 10), 0x0000, UINT16_MAX);
     else item->peer_port = protocol::PORT;
