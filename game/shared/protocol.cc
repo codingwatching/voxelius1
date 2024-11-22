@@ -98,7 +98,6 @@ void protocol::send(ENetPeer *peer, ENetHost *host, const protocol::LoginRequest
     PacketBuffer::setup(write_buffer);
     PacketBuffer::write_UI16(write_buffer, protocol::LoginRequest::ID);
     PacketBuffer::write_UI32(write_buffer, packet.version);
-    PacketBuffer::write_UI64(write_buffer, packet.password_hash);
     PacketBuffer::write_UI64(write_buffer, packet.vdef_checksum);
     PacketBuffer::write_UI64(write_buffer, packet.player_uid);
     PacketBuffer::write_string(write_buffer, packet.username.substr(0, protocol::MAX_USERNAME));
@@ -270,7 +269,6 @@ void protocol::receive(const ENetPacket *packet, ENetPeer *peer)
         case protocol::LoginRequest::ID:
             login_request.peer = peer;
             login_request.version = PacketBuffer::read_UI32(read_buffer);
-            login_request.password_hash = PacketBuffer::read_UI64(read_buffer);
             login_request.vdef_checksum = PacketBuffer::read_UI64(read_buffer);
             login_request.player_uid = PacketBuffer::read_UI64(read_buffer);
             login_request.username = PacketBuffer::read_string(read_buffer);

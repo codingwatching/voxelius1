@@ -19,7 +19,7 @@
 
 constexpr static ImGuiWindowFlags WINDOW_FLAGS = ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoDecoration;
 
-constexpr static std::size_t MAX_HISTORY_SIZE = 128;
+constexpr static unsigned int MAX_HISTORY_SIZE = 128U;
 
 struct GuiChatMessage final {
     std::uint64_t spawn {};
@@ -28,6 +28,7 @@ struct GuiChatMessage final {
 };
 
 static int key_chat = GLFW_KEY_ENTER;
+static unsigned int history_size = 32U;
 static std::deque<GuiChatMessage> history = {};
 static std::string chat_input = {};
 static bool needs_focus = false;
@@ -105,8 +106,10 @@ static void on_glfw_key(const GlfwKeyEvent &event)
 void client_chat::init(void)
 {
     Config::add(globals::client_config, "chat.key", key_chat);
+    Config::add(globals::client_config, "chat.history_size", history_size);
 
     settings::add_key_binding(2, settings::KEYBOARD_MISC, "key.chat", key_chat);
+    settings::add_slider(2, settings::VIDEO_GUI, "chat.history_size", history_size, 0U, MAX_HISTORY_SIZE, false);
 
     globals::dispatcher.sink<protocol::ChatMessage>().connect<&on_chat_message_packet>();
     globals::dispatcher.sink<GlfwKeyEvent>().connect<&on_glfw_key>();
@@ -119,9 +122,15 @@ void client_chat::init_late(void)
 
 void client_chat::update(void)
 {
-    while(history.size() > MAX_HISTORY_SIZE) {
-        // Truncate old chat messages
-        history.pop_front();
+    history_size = cxpr::min(history_size, MAX_HISTORY_SIZE);
+    
+    if(history_size == 0U) {
+        history.clear();
+    }
+    else {    
+        while(history.size() > history_size) {
+            history.pop_front();
+        }
     }
 }
 

@@ -118,3 +118,8 @@ namespace vdef
 {
 void purge(void);
 } // namespace vdef
+
+namespace vdef
+{
+std::uint64_t calc_checksum(void);
+} // namespace vdef

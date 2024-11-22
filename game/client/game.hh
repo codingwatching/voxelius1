@@ -5,6 +5,7 @@
 
 namespace client_game
 {
+extern bool streamer_mode;
 extern bool vertical_sync;
 extern bool world_curvature;
 extern unsigned int pixel_size;
@@ -16,7 +17,6 @@ namespace client_game
 extern std::string username;
 extern std::uint64_t player_uid;
 } // namespace client_game
-
 
 namespace client_game
 {

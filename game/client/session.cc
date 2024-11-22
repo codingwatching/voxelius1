@@ -13,6 +13,7 @@
 #include <game/shared/chunk_coord.hh>
 #include <game/shared/local_coord.hh>
 #include <game/shared/protocol.hh>
+#include <game/shared/vdef.hh>
 #include <game/shared/voxel_coord.hh>
 #include <game/shared/world.hh>
 #include <spdlog/spdlog.h>
@@ -124,7 +125,7 @@ void session::connect(const std::string &host, std::uint16_t port)
     globals::session_tick_dt = UINT64_MAX;
     globals::session_send_time = UINT64_MAX;
     globals::session_username = std::string();
-    
+
     if(!globals::session_peer) {
         message_box::reset();
         message_box::set_title("disconnected.disconnected");
@@ -184,8 +185,7 @@ void session::send_login_request(void)
 {
     protocol::LoginRequest packet = {};
     packet.version = protocol::VERSION;
-    packet.password_hash = UINT64_MAX; // FIXME
-    packet.vdef_checksum = UINT64_MAX; // FIXME
+    packet.vdef_checksum = vdef::calc_checksum();
     packet.player_uid = client_game::player_uid;
     packet.username = client_game::username;
     protocol::send(globals::session_peer, nullptr, packet);

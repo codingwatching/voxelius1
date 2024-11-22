@@ -7,6 +7,7 @@
 #include <entt/signal/dispatcher.hpp>
 #include <game/client/event/glfw_key.hh>
 #include <game/client/event/language_set.hh>
+#include <game/client/game.hh>
 #include <game/client/globals.hh>
 #include <game/client/gui_screen.hh>
 #include <game/client/play_menu.hh>
@@ -103,9 +104,11 @@ static void add_new_server(void)
 static void edit_selected_server(void)
 {
     input_itemname = selected_server->name;
+
     if(selected_server->peer_port != protocol::PORT)
         input_hostname = fmt::format("{}:{}", selected_server->peer_host, selected_server->peer_port);
     else input_hostname = selected_server->peer_host;
+
     editing_server = true;
     needs_focus = true;
 }
@@ -287,8 +290,16 @@ static void layout_server_edit(ServerStatusItem *item)
 
     ImGui::EndDisabled();
 
+    ImGuiInputTextFlags hostname_flags = ImGuiInputTextFlags_CharsNoBlank;
+
+    if(client_game::streamer_mode) {
+        // Hide server hostname to avoid things like
+        // followers flooding the server that is streamed online
+        hostname_flags |= ImGuiInputTextFlags_Password;
+    }
+
     ImGui::SetNextItemWidth(-0.25f * ImGui::GetContentRegionAvail().x);
-    ImGui::InputText("###play_menu.servers.edit_hostname", &input_hostname, ImGuiInputTextFlags_CharsNoBlank);
+    ImGui::InputText("###play_menu.servers.edit_hostname", &input_hostname, hostname_flags);
 }
 
 static void layout_worlds(void)
@@ -377,10 +388,13 @@ void play_menu::init(void)
             item->num_players = UINT16_MAX;
             item->server_motd = std::string();
             item->status = STATUS_INIT;
+
+            parse_hostname(item, parts[0]);
+
             if(parts.size() >= 2)
                 item->name = parts[1];
             else item->name = DEFAULT_SERVER_NAME;
-            parse_hostname(item, parts[0]);
+
             servers_deque.push_back(item);
         }
     }

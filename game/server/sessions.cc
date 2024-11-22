@@ -13,6 +13,7 @@
 #include <game/shared/event/chunk_update.hh>
 #include <game/shared/event/voxel_set.hh>
 #include <game/shared/protocol.hh>
+#include <game/shared/vdef.hh>
 #include <mathlib/constexpr.hh>
 #include <spdlog/fmt/fmt.h>
 #include <spdlog/spdlog.h>
@@ -49,7 +50,12 @@ static void on_login_request_packet(const protocol::LoginRequest &packet)
         protocol::send_disconnect(packet.peer, nullptr, "protocol.outdated_client");
         return;
     }
-    
+
+    if(packet.vdef_checksum != vdef::calc_checksum()) {
+        protocol::send_disconnect(packet.peer, nullptr, "protocol.vdef_checksum_mismatch");
+        return;
+    }
+
     if(Session *session = sessions::create(packet.peer, packet.player_uid, packet.username)) {
         protocol::LoginResponse response = {};
         response.session_id = session->session_id;

@@ -17,6 +17,7 @@ namespace sessions
 {
 extern unsigned int max_players;
 extern unsigned int num_players;
+extern std::uint64_t password_hash;
 } // namespace sessions
 
 namespace sessions

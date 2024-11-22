@@ -11,7 +11,7 @@ namespace protocol
 constexpr static std::size_t MAX_CHAT = 16384;
 constexpr static std::size_t MAX_USERNAME = 64;
 constexpr static std::uint16_t PORT = 43103;
-constexpr static std::uint32_t VERSION = 7;
+constexpr static std::uint32_t VERSION = 8;
 } // namespace protocol
 
 namespace protocol
@@ -101,7 +101,6 @@ struct protocol::StatusResponse final : public protocol::Base<0x0001> {
 
 struct protocol::LoginRequest final : public protocol::Base<0x0002> {
     std::uint32_t version {};
-    std::uint64_t password_hash {};
     std::uint64_t vdef_checksum {};
     std::uint64_t player_uid {};
     std::string username {};

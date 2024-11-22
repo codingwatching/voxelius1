@@ -58,6 +58,7 @@
 #include <game/shared/entity/transform.hh>
 #include <game/shared/entity/velocity.hh>
 
+bool client_game::streamer_mode = false;
 bool client_game::vertical_sync = true;
 bool client_game::world_curvature = true;
 unsigned int client_game::pixel_size = 4U;
@@ -156,6 +157,7 @@ void client_game::init(void)
 
     client_game::player_uid = epoch::microseconds();
     
+    Config::add(globals::client_config, "game.streamer_mode", client_game::streamer_mode);
     Config::add(globals::client_config, "game.vertical_sync", client_game::vertical_sync);
     Config::add(globals::client_config, "game.world_curvature", client_game::world_curvature);
     Config::add(globals::client_config, "game.pixel_size", client_game::pixel_size);
@@ -164,6 +166,7 @@ void client_game::init(void)
     Config::add(globals::client_config, "game.username", client_game::username);
     Config::add(globals::client_config, "game.player_uid", client_game::player_uid);
 
+    settings::add_checkbox(1, settings::VIDEO_GUI, "game.streamer_mode", client_game::streamer_mode, true);
     settings::add_checkbox(5, settings::VIDEO, "game.vertical_sync", client_game::vertical_sync, false);
     settings::add_checkbox(4, settings::VIDEO, "game.world_curvature", client_game::world_curvature, true);
     settings::add_slider(1, settings::VIDEO, "game.pixel_size", client_game::pixel_size, 1U, 4U, true);

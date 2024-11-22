@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: BSD-2-Clause
+#include <common/crc64.hh>
 #include <common/fstools.hh>
 #include <game/shared/vdef.hh>
 #include <parson.h>
@@ -249,4 +250,19 @@ void vdef::purge(void)
     vdef::builders.clear();
     vdef::names.clear();
     vdef::voxels.clear();
+}
+
+std::uint64_t vdef::calc_checksum(void)
+{
+    std::uint64_t result = 0;
+
+    for(const VoxelInfo &info : voxels) {
+        result = crc64::get(info.name, result);
+        result = crc64::get(info.state, result);
+        result += static_cast<std::uint64_t>(info.type);
+        result += static_cast<std::uint64_t>(info.base);
+        result += info.blending ? 256 : 1;
+    }
+
+    return result;
 }
