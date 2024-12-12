@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <array>
 #include <chrono>
+#include <filesystem>
 #include <functional>
 #include <random>
 #include <sstream>
@@ -37,7 +38,13 @@
 #include <physfs.h>
 
 #include <spdlog/spdlog.h>
-#include <spdlog/fmt/fmt.h>
+#include <spdlog/sinks/stdout_color_sinks.h>
+
+#if defined(_WIN32)
+#define WIN32_LEAN_AND_MEAN
+#include <spdlog/sinks/msvc_sink.h>
+#include <windows.h>
+#endif
 
 #include <stb_image.h>
 #include <stb_image_write.h>

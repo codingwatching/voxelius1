@@ -12,6 +12,8 @@ add_library(enet STATIC
     "${CMAKE_CURRENT_LIST_DIR}/src/unix.c"
     "${CMAKE_CURRENT_LIST_DIR}/src/win32.c")
 target_include_directories(enet PUBLIC "${CMAKE_CURRENT_LIST_DIR}/include")
+set_target_properties(enet PROPERTIES FOLDER External)
+
 if(WIN32)
     target_compile_definitions(enet PRIVATE _WINSOCK_DEPRECATED_NO_WARNINGS)
     target_compile_options(enet PRIVATE -W3)

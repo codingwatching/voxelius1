@@ -2,7 +2,7 @@
 #include "client/precompiled.hh"
 #include "client/experiments.hh"
 
-#ifdef ENABLE_EXPERIMENTS
+#if ENABLE_EXPERIMENTS
 
 #include "shared/game_voxels.hh"
 #include "shared/world.hh"

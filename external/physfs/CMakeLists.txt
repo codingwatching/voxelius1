@@ -23,6 +23,7 @@ add_library(physfs STATIC
     "${CMAKE_CURRENT_LIST_DIR}/src/physfs_archiver_iso9660.c"
     "${CMAKE_CURRENT_LIST_DIR}/src/physfs_archiver_vdf.c")
 target_include_directories(physfs PUBLIC "${CMAKE_CURRENT_LIST_DIR}/include")
+set_target_properties(physfs PROPERTIES FOLDER External)
 
 if(APPLE)
     target_link_libraries(physfs PRIVATE "-framework IOkit -framework Foundation")

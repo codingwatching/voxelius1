@@ -1,4 +1,4 @@
-add_library(client STATIC
+add_executable(vclient
     "${CMAKE_CURRENT_LIST_DIR}/background.cc"
     "${CMAKE_CURRENT_LIST_DIR}/background.hh"
     "${CMAKE_CURRENT_LIST_DIR}/chat.cc"
@@ -38,7 +38,6 @@ add_library(client STATIC
     "${CMAKE_CURRENT_LIST_DIR}/language.cc"
     "${CMAKE_CURRENT_LIST_DIR}/language.hh"
     "${CMAKE_CURRENT_LIST_DIR}/main.cc"
-    "${CMAKE_CURRENT_LIST_DIR}/main.hh"
     "${CMAKE_CURRENT_LIST_DIR}/main_menu.cc"
     "${CMAKE_CURRENT_LIST_DIR}/main_menu.hh"
     "${CMAKE_CURRENT_LIST_DIR}/message_box.cc"
@@ -80,15 +79,20 @@ add_library(client STATIC
     "${CMAKE_CURRENT_LIST_DIR}/voxel_anims.hh"
     "${CMAKE_CURRENT_LIST_DIR}/voxel_atlas.cc"
     "${CMAKE_CURRENT_LIST_DIR}/voxel_atlas.hh")
-target_compile_definitions(client PUBLIC GLFW_INCLUDE_NONE)
-target_include_directories(client PRIVATE "${PROJECT_SOURCE_DIR}/source")
-target_include_directories(client PRIVATE "${PROJECT_SOURCE_DIR}/source/game")
-target_precompile_headers(client PRIVATE "${CMAKE_CURRENT_LIST_DIR}/precompiled.hh")
-target_link_libraries(client PUBLIC glad glfw imgui imgui_glfw imgui_opengl3)
-target_link_libraries(client PUBLIC shared)
+target_compile_definitions(vclient PUBLIC GLFW_INCLUDE_NONE)
+target_include_directories(vclient PRIVATE "${PROJECT_SOURCE_DIR}/source")
+target_include_directories(vclient PRIVATE "${PROJECT_SOURCE_DIR}/source/game")
+target_precompile_headers(vclient PRIVATE "${CMAKE_CURRENT_LIST_DIR}/precompiled.hh")
+target_link_libraries(vclient PUBLIC glad glfw imgui imgui_glfw imgui_opengl3)
+target_link_libraries(vclient PUBLIC shared)
 
 if(WIN32 AND MSVC)
     # GLFW defines APIENTRY and ENet includes
     # Windows API headers which also define APIENTRY
-    target_compile_options(client PRIVATE /wd4005)
+    target_compile_options(vclient PRIVATE /wd4005)
+endif()
+
+if(WIN32)
+    enable_language(RC)
+    target_sources(vclient PRIVATE "${PROJECT_SOURCE_DIR}/resource/vclient.rc")
 endif()

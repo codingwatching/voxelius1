@@ -10,5 +10,7 @@ add_library(spdlog STATIC
     "${CMAKE_CURRENT_LIST_DIR}/src/stdout_sinks.cpp")
 target_compile_definitions(spdlog PUBLIC SPDLOG_COMPILED_LIB=1)
 target_include_directories(spdlog PUBLIC "${CMAKE_CURRENT_LIST_DIR}/include")
+set_target_properties(spdlog PROPERTIES FOLDER External)
+
 find_package(Threads REQUIRED)
 target_link_libraries(spdlog PUBLIC Threads::Threads)

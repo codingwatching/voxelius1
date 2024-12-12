@@ -50,7 +50,7 @@
 #include "client/voxel_anims.hh"
 #include "client/voxel_atlas.hh"
 
-#ifdef ENABLE_EXPERIMENTS
+#if ENABLE_EXPERIMENTS
 #include "client/experiments.hh"
 #endif /* ENABLE_EXPERIMENTS */
 
@@ -305,7 +305,7 @@ void client_game::init(void)
     progress::init();
     message_box::init();
 
-#ifdef ENABLE_EXPERIMENTS
+#if ENABLE_EXPERIMENTS
     experiments::init();
 #endif /* ENABLE_EXPERIMENTS */
 
@@ -326,7 +326,7 @@ void client_game::init_late(void)
 
     game_voxels::populate();
 
-#ifdef ENABLE_EXPERIMENTS
+#if ENABLE_EXPERIMENTS
     experiments::init_late();
 #endif /* ENABLE_EXPERIMENTS */
 
@@ -372,7 +372,7 @@ void client_game::deinit(void)
         while(enet_host_service(globals::client_host, nullptr, 50));
     }
 
-#ifdef ENABLE_EXPERIMENTS
+#if ENABLE_EXPERIMENTS
     experiments::deinit();
 #endif /* ENABLE_EXPERIMENTS */
 
@@ -402,7 +402,7 @@ void client_game::deinit(void)
 
 void client_game::update(void)
 {
-#ifdef ENABLE_EXPERIMENTS
+#if ENABLE_EXPERIMENTS
     experiments::update();
 #endif /* ENABLE_EXPERIMENTS */
 
@@ -425,7 +425,7 @@ void client_game::update(void)
 
 void client_game::update_late(void)
 {
-#ifdef ENABLE_EXPERIMENTS
+#if ENABLE_EXPERIMENTS
     experiments::update_late();
 #endif /* ENABLE_EXPERIMENTS */
 

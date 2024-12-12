@@ -10,9 +10,12 @@ add_library(imgui STATIC
     "${CMAKE_CURRENT_LIST_DIR}/src/imgui.cpp")
 target_include_directories(imgui PUBLIC "${CMAKE_CURRENT_LIST_DIR}/include")
 target_include_directories(imgui PRIVATE "${CMAKE_CURRENT_LIST_DIR}/src")
+set_target_properties(imgui PROPERTIES FOLDER External)
 
 add_library(imgui_glfw STATIC "${CMAKE_CURRENT_LIST_DIR}/src/imgui_impl_glfw.cpp")
 target_link_libraries(imgui_glfw PUBLIC glfw imgui)
+set_target_properties(imgui_glfw PROPERTIES FOLDER External)
 
 add_library(imgui_opengl3 STATIC "${CMAKE_CURRENT_LIST_DIR}/src/imgui_impl_opengl3.cpp")
 target_link_libraries(imgui_opengl3 PUBLIC imgui)
+set_target_properties(imgui_opengl3 PROPERTIES FOLDER External)

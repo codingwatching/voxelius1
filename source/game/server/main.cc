@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: BSD-2-Clause
 #include "server/precompiled.hh"
-#include "server/main.hh"
 
 #include "config/cmake.hh"
 
@@ -8,6 +7,8 @@
 
 #include "common/config.hh"
 #include "common/epoch.hh"
+
+#include "shared/setup.hh"
 
 #include "server/game.hh"
 #include "server/globals.hh"
@@ -19,8 +20,10 @@ static void on_sigint(int)
     globals::is_running = false;
 }
 
-void server::main(void)
+int main(int argc, char **argv)
 {
+    shared::setup(argc, argv);
+
     spdlog::info("server: game version: {}", PROJECT_VERSION_STRING);
 
     globals::frametime = 0.0f;
@@ -71,4 +74,8 @@ void server::main(void)
     server_game::deinit();
     
     Config::save(globals::server_config, "server.conf");
+
+    shared::desetup();
+
+    return 0;
 }

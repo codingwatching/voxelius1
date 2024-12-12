@@ -6,7 +6,7 @@
 // temporary features that don't have a
 // good place to be permanently implemented yet
 
-#ifdef ENABLE_EXPERIMENTS
+#if ENABLE_EXPERIMENTS
 
 namespace experiments
 {

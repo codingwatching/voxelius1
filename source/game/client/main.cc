@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: BSD-2-Clause
 #include "client/precompiled.hh"
-#include "client/main.hh"
 
 #include "config/cmake.hh"
 
@@ -13,6 +12,7 @@
 #include "common/strtools.hh"
 
 #include "shared/motd.hh"
+#include "shared/setup.hh"
 
 #include "client/event/glfw_cursor_pos.hh"
 #include "client/event/glfw_framebuffer_size.hh"
@@ -123,8 +123,10 @@ static void on_opengl_message(GLenum source, GLenum type, GLuint id, GLenum seve
     spdlog::info("opengl: {}", reinterpret_cast<const char *>(message));
 }
 
-void client::main(void)
+int main(int argc, char **argv)
 {
+    shared::setup(argc, argv);
+
     spdlog::info("client: game version: {}", PROJECT_VERSION_STRING);
 
     glfwSetErrorCallback(&on_glfw_error);
@@ -344,4 +346,8 @@ void client::main(void)
     glfwTerminate();
 
     Config::save(globals::client_config, "client.conf");
+
+    shared::desetup();
+
+    return 0;
 }

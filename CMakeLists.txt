@@ -1,13 +1,16 @@
 cmake_minimum_required(VERSION 3.15 FATAL_ERROR)
 project(voxelius LANGUAGES CXX VERSION 2024.12.001)
 
+# This enables solution directories if the feature is applicable
+# to the target build environment. This allows built-in pseudo-targets
+# like ALL_BUILD and ZERO_CHECK to be moved out of sight into a folder
+set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+
 set(BUILD_CLIENT ON CACHE BOOL "Build Voxelius client executable")
 set(BUILD_SERVER ON CACHE BOOL "Build Voxelius server executable")
 
-set(ENABLE_EXPERIMENTS OFF CACHE BOOL "Enable generic experimental features")
-set(ENABLE_SINGLEPLAYER OFF CACHE BOOL "Enable singleplayer support (experimental)")
-set(ENABLE_VOX2_WORLDGEN OFF CACHE BOOL "Enable extended world generator (Vox2) implementation")
-set(ENABLE_PROTOCOL_PARANOIA OFF CACHE BOOL "Enable additional network protocol sanity checks")
+set(ENABLE_EXPERIMENTS OFF CACHE BOOL "Enable basic experimental features")
+set(ENABLE_SINGLEPLAYER OFF CACHE BOOL "Enable experimental singleplayer support")
 
 if(WIN32)
     # On Windows we cannot really guarantee the target system has
@@ -80,10 +83,15 @@ add_subdirectory(source/config)
 add_subdirectory(source/common)
 add_subdirectory(source/mathlib)
 
-add_subdirectory(source/game/client)
-add_subdirectory(source/game/server)
+if(BUILD_CLIENT)
+    add_subdirectory(source/game/client)
+endif()
+
+if(BUILD_SERVER)
+    add_subdirectory(source/game/server)
+endif()
+
 add_subdirectory(source/game/shared)
-add_subdirectory(source/launch)
 
 include(package/config.cmake)
 include(CPack)

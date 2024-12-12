@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: BSD-2-Clause
-#include "launch/precompiled.hh"
+#include "shared/precompiled.hh"
+#include "shared/setup.hh"
+
 #include "common/cmdline.hh"
 #include "common/fstools.hh"
-
-#include "game/client/main.hh"
-#include "game/server/main.hh"
 
 static std::filesystem::path get_gamepath(void)
 {
@@ -74,30 +73,54 @@ static std::filesystem::path get_userpath(void)
     return std::filesystem::current_path();
 }
 
-int main(int argc, char **argv)
+void shared::setup(int argc, char **argv)
 {
     cmdline::append(argc, argv);
 
-    auto *logger = spdlog::default_logger_raw();
-    logger->sinks().clear();
-    logger->sinks().push_back(std::make_shared<spdlog::sinks::stdout_color_sink_mt>());
+#if defined(_WIN32)
+#if defined(NDEBUG)
+    if(GetConsoleWindow() && !cmdline::contains("preserve-winconsole")) {
+        // Hide the console window on release builds
+        // unless explicitly specified to preserve it instead
+        FreeConsole();
+    }
+#else
+    if(GetConsoleWindow() && cmdline::contains("hide-winconsole")) {
+        // Do NOT hide the console window on debug builds
+        // unless explicitly specified to hide it instead
+        FreeConsole();
+    }
+#endif
+#endif
+
+    auto &logger = spdlog::default_logger();
+    auto &logger_sinks = logger->sinks();
+
+    logger_sinks.clear();
+    logger_sinks.push_back(std::make_shared<spdlog::sinks::stderr_color_sink_mt>(spdlog::color_mode::automatic));
+
+#if defined(_WIN32)
+    logger_sinks.push_back(std::make_shared<spdlog::sinks::msvc_sink_mt>(true));
+#endif
+
     logger->set_level(spdlog::level::trace);
     logger->set_pattern("[%H:%M:%S] %^[%L]%$ %v");
+    logger->flush();
 
     if(!PHYSFS_init(argv[0])) {
         spdlog::critical("physfs: init failed: {}", fstools::error());
         std::terminate();
     }
 
-    const auto gamepath = get_gamepath();
-    const auto userpath = get_userpath();
+    auto gamepath = get_gamepath();
+    auto userpath = get_userpath();
 
     spdlog::info("main: set gamepath to {}", gamepath.string());
     spdlog::info("main: set userpath to {}", userpath.string());
 
-    std::error_code dingus = {};
-    std::filesystem::create_directories(gamepath, dingus);
-    std::filesystem::create_directories(userpath, dingus);
+    std::error_code ignore_error = {};
+    std::filesystem::create_directories(gamepath, ignore_error);
+    std::filesystem::create_directories(userpath, ignore_error);
 
     if(!PHYSFS_mount(gamepath.string().c_str(), nullptr, false)) {
         spdlog::critical("physfs: mount {} failed: {}", gamepath.string(), fstools::error());
@@ -118,26 +141,14 @@ int main(int argc, char **argv)
         spdlog::critical("enet: init failed");
         std::terminate();
     }
+}
 
-#if defined(LAUNCH_CLIENT)
-    spdlog::info("main: starting client");
-    client::main();
-#elif defined(LAUNCH_SERVER)
-    spdlog::info("main: starting server");
-    server::main();
-#else
-    #error Have your heard of the popular hit game Among Us?
-    #error Its a really cool game where 1-3 imposters try to kill off the crewmates,
-    #error while the crew has to finish their tasks or vote off the imposters to win.
-    #error Its 5 dollars on Steam and consoles but it is free on App Store and Google Play.
-#endif
-
+void shared::desetup(void)
+{
     enet_deinitialize();
 
     if(!PHYSFS_deinit()) {
         spdlog::critical("physfs: deinit failed: {}", fstools::error());
         std::terminate();
     }
-
-    return 0;
 }
