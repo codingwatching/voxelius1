@@ -125,7 +125,25 @@ static void on_opengl_message(GLenum source, GLenum type, GLuint id, GLenum seve
 
 int main(int argc, char **argv)
 {
+    cmdline::append(argc, argv);
+
     shared::setup(argc, argv);
+
+#if defined(_WIN32)
+#if defined(NDEBUG)
+    if(GetConsoleWindow() && !cmdline::contains("preserve-winconsole")) {
+        // Hide the console window on release builds
+        // unless explicitly specified to preserve it instead
+        FreeConsole();
+    }
+#else
+    if(GetConsoleWindow() && cmdline::contains("hide-winconsole")) {
+        // Do NOT hide the console window on debug builds
+        // unless explicitly specified to hide it instead
+        FreeConsole();
+    }
+#endif
+#endif
 
     spdlog::info("client: game version: {}", PROJECT_VERSION_STRING);
 

@@ -41,9 +41,7 @@
 #include <spdlog/sinks/stdout_color_sinks.h>
 
 #if defined(_WIN32)
-#define WIN32_LEAN_AND_MEAN
 #include <spdlog/sinks/msvc_sink.h>
-#include <windows.h>
 #endif
 
 #include <stb_image.h>

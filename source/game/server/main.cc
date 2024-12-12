@@ -6,6 +6,7 @@
 #include "mathlib/constexpr.hh"
 
 #include "common/config.hh"
+#include "common/cmdline.hh"
 #include "common/epoch.hh"
 
 #include "shared/setup.hh"
@@ -22,6 +23,8 @@ static void on_sigint(int)
 
 int main(int argc, char **argv)
 {
+    cmdline::append(argc, argv);
+
     shared::setup(argc, argv);
 
     spdlog::info("server: game version: {}", PROJECT_VERSION_STRING);

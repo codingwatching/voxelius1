@@ -75,24 +75,6 @@ static std::filesystem::path get_userpath(void)
 
 void shared::setup(int argc, char **argv)
 {
-    cmdline::append(argc, argv);
-
-#if defined(_WIN32)
-#if defined(NDEBUG)
-    if(GetConsoleWindow() && !cmdline::contains("preserve-winconsole")) {
-        // Hide the console window on release builds
-        // unless explicitly specified to preserve it instead
-        FreeConsole();
-    }
-#else
-    if(GetConsoleWindow() && cmdline::contains("hide-winconsole")) {
-        // Do NOT hide the console window on debug builds
-        // unless explicitly specified to hide it instead
-        FreeConsole();
-    }
-#endif
-#endif
-
     auto &logger = spdlog::default_logger();
     auto &logger_sinks = logger->sinks();
 

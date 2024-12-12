@@ -56,3 +56,8 @@
 #include <stb_image_write.h>
 
 #include <thread_pool.hpp>
+
+#if defined(_WIN32)
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#endif
