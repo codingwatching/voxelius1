@@ -4,6 +4,7 @@
 
 #include "mathlib/constexpr.hh"
 
+#include "common/cmdline.hh"
 #include "common/config.hh"
 #include "common/epoch.hh"
 
@@ -15,6 +16,7 @@
 #include "shared/game_voxels.hh"
 #include "shared/motd.hh"
 #include "shared/protocol.hh"
+#include "shared/universe.hh"
 #include "shared/world.hh"
 #include "shared/worldgen.hh"
 
@@ -46,7 +48,6 @@ void server_game::init(void)
     server_recieve::init();
 
     world::init();
-    worldgen::init();
 }
 
 void server_game::init_late(void)
@@ -72,7 +73,11 @@ void server_game::init_late(void)
 
     game_voxels::populate();
 
-    worldgen::init_late(worldgen_seed);
+    std::string universe_name = {};
+    
+    if(!cmdline::get_value("universe", universe_name))
+        universe_name = "save";
+    universe::setup(universe_name);
 
     constexpr int WSIZE = 16;
 
@@ -80,7 +85,7 @@ void server_game::init_late(void)
     for(int x = -WSIZE; x < WSIZE; x += 1) {
         for(int z = -WSIZE; z < WSIZE; z += 1) {
             for(int y = -3; y < 4; y += 1) {
-                worldgen::generate(ChunkCoord(x, y, z));
+                universe::load_chunk(ChunkCoord(x, y, z));
             }
         }
     }
@@ -99,13 +104,13 @@ void server_game::deinit(void)
 {
     protocol::send_disconnect(nullptr, globals::server_host, "protocol.server_shutdown");
 
-    worldgen::deinit();
-
     sessions::deinit();
 
     enet_host_flush(globals::server_host);
     enet_host_service(globals::server_host, nullptr, 500);
     enet_host_destroy(globals::server_host);
+
+    universe::save_everything();
 }
 
 void server_game::update(void)

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.15 FATAL_ERROR)
-project(VOXELIUS LANGUAGES CXX VERSION 0.0.1.2450)
+project(VOXELIUS LANGUAGES CXX VERSION 0.0.1.2451)
 
 # This enables solution directories if the feature is applicable
 # to the target build environment. This allows built-in pseudo-targets

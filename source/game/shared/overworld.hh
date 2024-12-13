@@ -5,7 +5,7 @@
 
 namespace overworld
 {
-void init_late(std::uint64_t seed);
+void setup(std::uint64_t seed);
 } // namespace overworld
 
 namespace overworld

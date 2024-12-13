@@ -4,9 +4,7 @@
 
 namespace worldgen
 {
-void init(void);
-void init_late(std::uint64_t seed);
-void deinit(void);
+void setup(std::uint64_t seed);
 void update(void);
 } // namespace worldgen
 

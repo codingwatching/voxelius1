@@ -15,6 +15,7 @@
 #include "shared/chunk_coord.hh"
 #include "shared/local_coord.hh"
 #include "shared/protocol.hh"
+#include "shared/universe.hh"
 #include "shared/vdef.hh"
 #include "shared/voxel_coord.hh"
 #include "shared/world.hh"
@@ -265,19 +266,18 @@ void session::sp::update_late(void)
 
 }
 
-void session::sp::load_world(const std::string &world_dir)
+void session::sp::load_world(const std::string &universe_directory)
 {
     session::invalidate();
 
-    worldgen::init();
-    worldgen::init_late(UINT64_C(42));
+    universe::setup("save/debug");
 
     constexpr int WSIZE = 16;
 
     for(int x = -WSIZE; x < WSIZE; x += 1) {
         for(int z = -WSIZE; z < WSIZE; z += 1) {
             for(int y = -3; y < 4; y += 1) {
-                worldgen::generate(ChunkCoord(x, y, z));
+                universe::load_chunk(ChunkCoord(x, y, z));
             }
         }
     }
@@ -293,7 +293,7 @@ void session::sp::load_world(const std::string &world_dir)
 
 void session::sp::unload_world(void)
 {
-    session::invalidate();
+    universe::save_everything();
 
-    worldgen::deinit();
+    session::invalidate();
 }

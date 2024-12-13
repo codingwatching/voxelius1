@@ -46,7 +46,7 @@ static Metadata &get_metadata(const ChunkCoord2D &cpos)
     return it->second;
 }
 
-void overworld::init_late(std::uint64_t seed)
+void overworld::setup(std::uint64_t seed)
 {
     twister.seed(seed);
 

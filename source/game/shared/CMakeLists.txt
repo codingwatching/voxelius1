@@ -33,6 +33,8 @@ add_library(shared STATIC
     "${CMAKE_CURRENT_LIST_DIR}/ray_dda.hh"
     "${CMAKE_CURRENT_LIST_DIR}/setup.hh"
     "${CMAKE_CURRENT_LIST_DIR}/setup.cc"
+    "${CMAKE_CURRENT_LIST_DIR}/universe.hh"
+    "${CMAKE_CURRENT_LIST_DIR}/universe.cc"
     "${CMAKE_CURRENT_LIST_DIR}/vdef.cc"
     "${CMAKE_CURRENT_LIST_DIR}/vdef.hh"
     "${CMAKE_CURRENT_LIST_DIR}/voxel.hh"

@@ -19,6 +19,6 @@ namespace session::sp
 {
 void update(void);
 void update_late(void);
-void load_world(const std::string &world_dir);
+void load_world(const std::string &universe_directory);
 void unload_world(void);
 } // namespace session::sp

@@ -40,18 +40,9 @@ constexpr static unsigned int MAX_CHUNKS_PER_TICK = 128U;
 constexpr static unsigned int MAX_CHUNKS_PER_TICK = 32U;
 #endif
 
-void worldgen::init(void)
+void worldgen::setup(std::uint64_t seed)
 {
-}
-
-void worldgen::init_late(std::uint64_t seed)
-{
-    overworld::init_late(seed);
-}
-
-void worldgen::deinit(void)
-{
-
+    overworld::setup(seed);
 }
 
 void worldgen::update(void)
