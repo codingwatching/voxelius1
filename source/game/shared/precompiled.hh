@@ -44,5 +44,9 @@
 #include <spdlog/sinks/msvc_sink.h>
 #endif
 
+#if defined(__unix__)
+#include <spdlog/sinks/syslog_sink.h>
+#endif
+
 #include <stb_image.h>
 #include <stb_image_write.h>

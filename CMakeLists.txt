@@ -93,5 +93,5 @@ endif()
 
 add_subdirectory(source/game/shared)
 
-include(package/config.cmake)
+include(package/package.cmake)
 include(CPack)

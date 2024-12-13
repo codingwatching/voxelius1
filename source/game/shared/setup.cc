@@ -75,17 +75,39 @@ static std::filesystem::path get_userpath(void)
 
 void shared::setup(int argc, char **argv)
 {
-    auto &logger = spdlog::default_logger();
+    auto logger = spdlog::default_logger();
     auto &logger_sinks = logger->sinks();
 
-    logger_sinks.clear();
-    logger_sinks.push_back(std::make_shared<spdlog::sinks::stderr_color_sink_mt>(spdlog::color_mode::automatic));
-
 #if defined(_WIN32)
+    logger_sinks.clear();
     logger_sinks.push_back(std::make_shared<spdlog::sinks::msvc_sink_mt>(true));
+    logger_sinks.push_back(std::make_shared<spdlog::sinks::stderr_color_sink_mt>());
 #endif
 
-    logger->set_level(spdlog::level::trace);
+#if defined(__unix__)
+    if(cmdline::contains("use-syslog")) {
+        logger_sinks.clear();
+        logger_sinks.push_back(std::make_shared<spdlog::sinks::stderr_color_sink_mt>());
+        logger_sinks.push_back(std::make_shared<spdlog::sinks::syslog_sink_mt>("voxelius", LOG_PID | LOG_NDELAY, LOG_USER))
+    }
+    else {
+        logger_sinks.clear();
+        logger_sinks.push_back(std::make_shared<spdlog::sinks::stderr_color_sink_mt>());
+    }
+#endif
+
+#if defined(NDEBUG)
+    const auto default_loglevel = spdlog::level::info;
+#else
+    const auto default_loglevel = spdlog::level::trace;
+#endif
+
+    if(cmdline::contains("quiet"))
+        logger->set_level(spdlog::level::warn);
+    else if(cmdline::contains("verbose"))
+        logger->set_level(spdlog::level::trace);
+    else logger->set_level(default_loglevel);
+
     logger->set_pattern("[%H:%M:%S] %^[%L]%$ %v");
     logger->flush();
 

@@ -4,8 +4,14 @@
 
 namespace worldgen
 {
+extern unsigned int max_chunks_per_tick;
+extern std::uint64_t seed;
+} // namespace worldgen
+
+namespace worldgen
+{
 void init(void);
-void init_late(std::uint64_t seed);
+void init_late(void);
 void deinit(void);
 void update(void);
 } // namespace worldgen

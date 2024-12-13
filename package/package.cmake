@@ -33,9 +33,9 @@ if(WIN32)
     set(CPACK_GENERATOR NSIS)
 
     # Assign installer interface images
-    set(CPACK_NSIS_MUI_HEADERIMAGE "${PROJECT_SOURCE_DIR}\\\\package\\\\header.bmp")
-    set(CPACK_NSIS_MUI_WELCOMEFINISHPAGE_BITMAP "${PROJECT_SOURCE_DIR}\\\\package\\\\welcome.bmp")
-    set(CPACK_NSIS_MUI_UNWELCOMEFINISHPAGE_BITMAP "${PROJECT_SOURCE_DIR}\\\\package\\\\welcome.bmp")
+    set(CPACK_NSIS_MUI_HEADERIMAGE "${PROJECT_SOURCE_DIR}\\\\package\\\\nsis_header.bmp")
+    set(CPACK_NSIS_MUI_WELCOMEFINISHPAGE_BITMAP "${PROJECT_SOURCE_DIR}\\\\package\\\\nsis_welcome.bmp")
+    set(CPACK_NSIS_MUI_UNWELCOMEFINISHPAGE_BITMAP "${PROJECT_SOURCE_DIR}\\\\package\\\\nsis_welcome.bmp")
 
     # Assign start menu shortcuts
     list(APPEND CPACK_NSIS_MENU_LINKS "vserver.exe" "${CPACK_PACKAGE_NAME} Server")

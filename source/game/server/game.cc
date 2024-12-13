@@ -33,6 +33,9 @@ void server_game::init(void)
     Config::add(globals::server_config, "game.listen_port", listen_port);
     Config::add(globals::server_config, "game.status_peers", status_peers);
 
+    Config::add(globals::server_config, "worldgen.max_chunks_per_tick", worldgen::max_chunks_per_tick);
+    Config::add(globals::server_config, "worldgen.seed", worldgen::seed);
+
     sessions::init();
 
     motd::init("motds/server.txt");
@@ -68,7 +71,7 @@ void server_game::init_late(void)
 
     game_voxels::populate();
 
-    worldgen::init_late(UINT64_C(42));
+    worldgen::init_late();
 
     constexpr int WSIZE = 16;
 
