@@ -88,7 +88,7 @@ void shared::setup(int argc, char **argv)
     if(cmdline::contains("use-syslog")) {
         logger_sinks.clear();
         logger_sinks.push_back(std::make_shared<spdlog::sinks::stderr_color_sink_mt>());
-        logger_sinks.push_back(std::make_shared<spdlog::sinks::syslog_sink_mt>("voxelius", LOG_PID | LOG_NDELAY, LOG_USER))
+        logger_sinks.push_back(std::make_shared<spdlog::sinks::syslog_sink_mt>("voxelius", LOG_PID | LOG_NDELAY, LOG_USER));
     }
     else {
         logger_sinks.clear();
