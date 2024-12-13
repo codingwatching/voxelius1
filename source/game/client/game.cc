@@ -8,6 +8,9 @@
 #include "common/epoch.hh"
 #include "common/fstools.hh"
 
+#include "shared/entity/transform.hh"
+#include "shared/entity/velocity.hh"
+
 #include "shared/game_voxels.hh"
 #include "shared/protocol.hh"
 #include "shared/ray_dda.hh"
@@ -51,15 +54,14 @@
 #include "client/voxel_atlas.hh"
 
 #if ENABLE_EXPERIMENTS
+#include "shared/entity/head.hh"
+#include "shared/entity/player.hh"
 #include "client/experiments.hh"
 #endif /* ENABLE_EXPERIMENTS */
 
-// Debug
-#include "shared/entity/head.hh"
-#include "shared/entity/player.hh"
-#include "shared/entity/transform.hh"
-#include "shared/entity/velocity.hh"
-
+#if ENABLE_SINGLEPLAYER
+#include "client/singleplayer.hh"
+#endif /* ENABLE_SINGLEPLAYER */
 
 bool client_game::streamer_mode = false;
 bool client_game::vertical_sync = true;
@@ -367,6 +369,15 @@ void client_game::init_late(void)
 
 void client_game::deinit(void)
 {
+#if ENABLE_SINGLEPLAYER
+    if((globals::session_peer == nullptr) && globals::registry.valid(globals::player)) {
+        // Singleplayer subsystem is something of a
+        // wrapper on all the shared systems that should only
+        // be ticked server-side or client-side for singleplayer
+        singleplayer::shutdown();
+    }
+#endif /* ENABLE_SINGLEPLAYER */
+
     if(globals::session_peer) {
         session::disconnect("protocol.client_shutdown");
         while(enet_host_service(globals::client_host, nullptr, 50));
@@ -402,6 +413,10 @@ void client_game::deinit(void)
 
 void client_game::update(void)
 {
+#if ENABLE_SINGLEPLAYER
+    singleplayer::update();
+#endif /* ENABLE_SINGLEPLAYER */
+
 #if ENABLE_EXPERIMENTS
     experiments::update();
 #endif /* ENABLE_EXPERIMENTS */
@@ -482,6 +497,8 @@ void client_game::render(void)
 
     player_target::render();
 
+#if ENABLE_EXPERIMENTS
+
     const auto group = globals::registry.group(entt::get<PlayerComponent, HeadComponent, TransformComponent>);
 
     outline::prepare();
@@ -504,6 +521,8 @@ void client_game::render(void)
             outline::line(wpos, forward);
         }
     }
+
+#endif /* ENABLE_EXPERIMENTS */
 
     glViewport(0, 0, globals::width, globals::height);
     glClearColor(0.000f, 0.000f, 0.000f, 1.000f);

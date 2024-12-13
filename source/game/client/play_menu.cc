@@ -19,6 +19,10 @@
 #include "client/gui_screen.hh"
 #include "client/session.hh"
 
+#if ENABLE_SINGLEPLAYER
+#include "client/singleplayer.hh"
+#endif /* ENABLE_SINGLEPLAYER */
+
 
 constexpr static ImGuiWindowFlags WINDOW_FLAGS = ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoDecoration;
 
@@ -308,10 +312,19 @@ static void layout_server_edit(ServerStatusItem *item)
     ImGui::InputText("###play_menu.servers.edit_hostname", &input_hostname, hostname_flags);
 }
 
+#if ENABLE_SINGLEPLAYER
+
 static void layout_worlds(void)
 {
+    if(ImGui::Button("RUN DEBUG WORLD###play_menu.run_debug_world", ImVec2(-1.0f, 0.0f))) {
+        singleplayer::startup();
+    }
+
+    ImGui::NewLine();
     ImGui::TextDisabled("WIP for %zu years", static_cast<std::size_t>(globals::curtime / 1000000));
 }
+
+#endif /* ENABLE_SINGLEPLAYER */
 
 static void layout_servers(void)
 {

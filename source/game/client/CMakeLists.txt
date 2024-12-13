@@ -65,6 +65,8 @@ add_executable(vclient
     "${CMAKE_CURRENT_LIST_DIR}/session.hh"
     "${CMAKE_CURRENT_LIST_DIR}/settings.cc"
     "${CMAKE_CURRENT_LIST_DIR}/settings.hh"
+    "${CMAKE_CURRENT_LIST_DIR}/singleplayer.cc"
+    "${CMAKE_CURRENT_LIST_DIR}/singleplayer.hh"
     "${CMAKE_CURRENT_LIST_DIR}/skybox.cc"
     "${CMAKE_CURRENT_LIST_DIR}/skybox.hh"
     "${CMAKE_CURRENT_LIST_DIR}/splash.cc"

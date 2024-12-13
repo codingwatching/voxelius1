@@ -90,7 +90,7 @@ static void on_set_voxel_packet(const protocol::SetVoxel &packet)
 static void on_voxel_set(const VoxelSetEvent &event)
 {
     if(globals::session_peer) {
-        // Propagate changes to the server
+        // Multiplayer-only: propagate changes to the server
         protocol::send_set_voxel(globals::session_peer, nullptr, event.vpos, event.voxel);
     }
 }

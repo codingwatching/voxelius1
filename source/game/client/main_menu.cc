@@ -15,6 +15,10 @@
 #include "client/gui_screen.hh"
 #include "client/session.hh"
 
+#if ENABLE_SINGLEPLAYER
+#include "client/singleplayer.hh"
+#endif
+
 
 constexpr static ImGuiWindowFlags WINDOW_FLAGS = ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoDecoration;
 
@@ -53,6 +57,21 @@ static void on_language_set(const LanguageSetEvent &event)
     str_settings = language::resolve("main_menu.settings");
     str_leave = language::resolve("main_menu.leave");
     str_quit = language::resolve("main_menu.quit");
+}
+
+static void do_disconnect(void)
+{
+#if ENABLE_SINGLEPLAYER
+    if(globals::session_peer)
+        session::disconnect("protocol.client_disconnect");
+    else singleplayer::shutdown();
+#else
+    // With disabled singleplayer we can just send a disconnect
+    // packet and probably invalidate the session later
+    session::disconnect("protocol.client_disconnect");
+#endif
+
+    globals::gui_screen = GUI_PLAY_MENU;
 }
 
 void main_menu::init(void)
@@ -133,11 +152,8 @@ void main_menu::layout(void)
 
         if(globals::registry.valid(globals::player)) {
             ImGui::SetCursorPosX(button_xpos);
-            if(ImGui::Button(str_leave.c_str(), ImVec2(button_width, 0.0f))) {
-                session::disconnect("protocol.client_disconnect");
-                globals::gui_screen = GUI_PLAY_MENU;
-            }
-
+            if(ImGui::Button(str_leave.c_str(), ImVec2(button_width, 0.0f)))
+                do_disconnect();
             ImGui::Spacing();
         }
         else {
