@@ -28,6 +28,8 @@ extern std::uint64_t session_tick_dt;
 extern std::uint64_t session_send_time;
 extern std::string session_username;
 
+extern bool is_singleplayer;
+
 extern entt::entity player;
 
 extern GLuint world_fbo;

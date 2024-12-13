@@ -2,6 +2,11 @@
 #include "client/precompiled.hh"
 #include "client/session.hh"
 
+#include "shared/entity/head.hh"
+#include "shared/entity/player.hh"
+#include "shared/entity/transform.hh"
+#include "shared/entity/velocity.hh"
+
 #include "shared/event/chunk_update.hh"
 #include "shared/event/voxel_set.hh"
 
@@ -11,6 +16,7 @@
 #include "shared/vdef.hh"
 #include "shared/voxel_coord.hh"
 #include "shared/world.hh"
+#include "shared/worldgen.hh"
 
 #include "client/chat.hh"
 #include "client/game.hh"
@@ -59,6 +65,8 @@ static void on_disconnect_packet(const protocol::Disconnect &packet)
     });
 
     globals::gui_screen = GUI_MESSAGE_BOX;
+
+    globals::is_singleplayer = true;
 }
 
 static void on_set_voxel_packet(const protocol::SetVoxel &packet)
@@ -89,8 +97,16 @@ static void on_set_voxel_packet(const protocol::SetVoxel &packet)
 // everything else network related that is not player movement
 static void on_voxel_set(const VoxelSetEvent &event)
 {
+    if(globals::is_singleplayer) {
+        // We're not sending anything to the
+        // server because there is no server
+        // to send things to in the first place
+        return;
+    }
+
     if(globals::session_peer) {
-        // Multiplayer-only: propagate changes to the server
+        // Propagate changes to the server
+        // FIXME: should we also validate things here or wait for the server to do so
         protocol::send_set_voxel(globals::session_peer, nullptr, event.vpos, event.voxel);
     }
 }
@@ -103,6 +119,8 @@ void session::init(void)
     globals::session_send_time = UINT64_MAX;
     globals::session_username = std::string();
     
+    globals::is_singleplayer = true;
+
     globals::dispatcher.sink<protocol::LoginResponse>().connect<&on_login_response_packet>();
     globals::dispatcher.sink<protocol::Disconnect>().connect<&on_disconnect_packet>();
     globals::dispatcher.sink<protocol::SetVoxel>().connect<&on_set_voxel_packet>();
@@ -112,11 +130,44 @@ void session::init(void)
 
 void session::deinit(void)
 {
-    session::disconnect("protocol.client_shutdown");
+    if(globals::is_singleplayer) {
+        session::sp::unload_world();
+        return;
+    }
+
+    session::mp::disconnect("protocol.client_shutdown");
     globals::session_send_time = UINT64_MAX;
 }
 
-void session::connect(const std::string &host, std::uint16_t port)
+void session::invalidate(void)
+{
+    if(globals::session_peer) {
+        enet_peer_reset(globals::session_peer);
+        
+        message_box::reset();
+        message_box::set_title("disconnected.disconnected");
+        message_box::set_subtitle("enet.peer_connection_timeout");
+        message_box::add_button("disconnected.back", [](void) {
+            globals::gui_screen = GUI_PLAY_MENU;
+        });
+
+        globals::gui_screen = GUI_MESSAGE_BOX;
+    }
+
+    client_chat::clear();
+
+    globals::session_peer = nullptr;
+    globals::session_id = UINT16_MAX;
+    globals::session_tick_dt = UINT64_MAX;
+    globals::session_send_time = UINT64_MAX;
+    globals::session_username = std::string();
+
+    if(globals::registry.valid(globals::player))
+        globals::player = entt::null;
+    globals::registry.clear();
+}
+
+void session::mp::connect(const std::string &host, std::uint16_t port)
 {
     ENetAddress address = {};
     enet_address_set_host(&address, host.c_str());
@@ -127,6 +178,8 @@ void session::connect(const std::string &host, std::uint16_t port)
     globals::session_tick_dt = UINT64_MAX;
     globals::session_send_time = UINT64_MAX;
     globals::session_username = std::string();
+
+    globals::is_singleplayer = false;
 
     if(!globals::session_peer) {
         message_box::reset();
@@ -162,7 +215,7 @@ void session::connect(const std::string &host, std::uint16_t port)
     globals::gui_screen = GUI_PROGRESS;
 }
 
-void session::disconnect(const std::string &reason)
+void session::mp::disconnect(const std::string &reason)
 {
     if(globals::session_peer) {
         protocol::send_disconnect(globals::session_peer, nullptr, reason);
@@ -176,6 +229,8 @@ void session::disconnect(const std::string &reason)
         globals::session_tick_dt = UINT64_MAX;
         globals::session_username = std::string();
 
+        globals::is_singleplayer = true;
+
         globals::player = entt::null;
         globals::registry.clear();
         
@@ -183,7 +238,7 @@ void session::disconnect(const std::string &reason)
     }
 }
 
-void session::send_login_request(void)
+void session::mp::send_login_request(void)
 {
     protocol::LoginRequest packet = {};
     packet.version = protocol::VERSION;
@@ -196,30 +251,50 @@ void session::send_login_request(void)
     globals::gui_screen = GUI_PROGRESS;
 }
 
-void session::invalidate(void)
+void session::sp::update(void)
 {
-    if(globals::session_peer) {
-        enet_peer_reset(globals::session_peer);
-        
-        message_box::reset();
-        message_box::set_title("disconnected.disconnected");
-        message_box::set_subtitle("enet.peer_connection_timeout");
-        message_box::add_button("disconnected.back", [](void) {
-            globals::gui_screen = GUI_PLAY_MENU;
-        });
+    if(globals::is_singleplayer && globals::registry.valid(globals::player)) {
+        worldgen::update();
+    }
+}
 
-        globals::gui_screen = GUI_MESSAGE_BOX;
+void session::sp::update_late(void)
+{
+
+}
+
+void session::sp::load_world(const std::string &world_dir)
+{
+    session::invalidate();
+
+    worldgen::max_chunks_per_tick = 256U;
+    worldgen::seed = UINT64_C(42);
+
+    worldgen::init();
+    worldgen::init_late();
+
+    constexpr int WSIZE = 16;
+
+    for(int x = -WSIZE; x < WSIZE; x += 1) {
+        for(int z = -WSIZE; z < WSIZE; z += 1) {
+            for(int y = -3; y < 4; y += 1) {
+                worldgen::generate(ChunkCoord(x, y, z));
+            }
+        }
     }
 
-    client_chat::clear();
+    globals::player = globals::registry.create();
+    globals::registry.emplace<HeadComponent>(globals::player);
+    globals::registry.emplace<PlayerComponent>(globals::player);
+    globals::registry.emplace<TransformComponent>(globals::player);
+    globals::registry.emplace<VelocityComponent>(globals::player);
 
-    globals::session_peer = nullptr;
-    globals::session_id = UINT16_MAX;
-    globals::session_tick_dt = UINT64_MAX;
-    globals::session_send_time = UINT64_MAX;
-    globals::session_username = std::string();
+    globals::gui_screen = GUI_SCREEN_NONE;
+}
 
-    if(globals::registry.valid(globals::player))
-        globals::player = entt::null;
-    globals::registry.clear();
+void session::sp::unload_world(void)
+{
+    session::invalidate();
+
+    worldgen::deinit();
 }

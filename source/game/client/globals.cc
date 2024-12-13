@@ -26,6 +26,8 @@ std::uint64_t globals::session_tick_dt = UINT64_MAX;
 std::uint64_t globals::session_send_time = UINT64_MAX;
 std::string globals::session_username = std::string();
 
+bool globals::is_singleplayer = true;
+
 entt::entity globals::player = entt::null;
 
 GLuint globals::world_fbo = 0;

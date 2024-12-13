@@ -19,10 +19,6 @@
 #include "client/gui_screen.hh"
 #include "client/session.hh"
 
-#if ENABLE_SINGLEPLAYER
-#include "client/singleplayer.hh"
-#endif /* ENABLE_SINGLEPLAYER */
-
 
 constexpr static ImGuiWindowFlags WINDOW_FLAGS = ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoDecoration;
 
@@ -49,11 +45,8 @@ struct ServerStatusItem final {
     std::string name {};
 };
 
-#ifdef ENABLE_SINGLEPLAYER
 static std::string str_worlds_tab = {};
 static std::string str_servers_tab = {};
-#endif /* ENABLE_SINGLEPLAYER */
-
 static std::string str_servers_join = {};
 static std::string str_servers_connect = {};
 static std::string str_servers_add = {};
@@ -143,7 +136,7 @@ static void join_selected_server(void)
 {
     if(globals::session_peer)
         return;
-    session::connect(selected_server->peer_host, selected_server->peer_port);
+    session::mp::connect(selected_server->peer_host, selected_server->peer_port);
 }
 
 static void on_glfw_key(const GlfwKeyEvent &event)
@@ -169,11 +162,8 @@ static void on_glfw_key(const GlfwKeyEvent &event)
 
 static void on_language_set(const LanguageSetEvent &event)
 {
-#ifdef ENABLE_SINGLEPLAYER
     str_worlds_tab = language::resolve_ui("play_menu.worlds");
     str_servers_tab = language::resolve_ui("play_menu.servers");
-#endif /* ENABLE_SINGLEPLAYER */
-
     str_servers_join = language::resolve_ui("play_menu.servers.join");
     str_servers_connect = language::resolve_ui("play_menu.servers.connect");
     str_servers_add = language::resolve_ui("play_menu.servers.add");
@@ -312,19 +302,15 @@ static void layout_server_edit(ServerStatusItem *item)
     ImGui::InputText("###play_menu.servers.edit_hostname", &input_hostname, hostname_flags);
 }
 
-#if ENABLE_SINGLEPLAYER
-
 static void layout_worlds(void)
 {
     if(ImGui::Button("RUN DEBUG WORLD###play_menu.run_debug_world", ImVec2(-1.0f, 0.0f))) {
-        singleplayer::startup();
+        session::sp::load_world(std::string());
     }
 
     ImGui::NewLine();
     ImGui::TextDisabled("WIP for %zu years", static_cast<std::size_t>(globals::curtime / 1000000));
 }
-
-#endif /* ENABLE_SINGLEPLAYER */
 
 static void layout_servers(void)
 {
@@ -456,7 +442,6 @@ void play_menu::layout(void)
     if(ImGui::Begin("###play_menu", nullptr, WINDOW_FLAGS)) {
         ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(3.0f * globals::gui_scale, 3.0f * globals::gui_scale));
 
-#ifdef ENABLE_SINGLEPLAYER
         if(ImGui::BeginTabBar("###play_menu.tabs", ImGuiTabBarFlags_FittingPolicyResizeDown)) {
             if(ImGui::TabItemButton("<<")) {
                 globals::gui_screen = GUI_MAIN_MENU;
@@ -481,12 +466,6 @@ void play_menu::layout(void)
 
             ImGui::EndTabBar();
         }
-#else /* ENABLE_SINGLEPLAYER */
-        if(ImGui::BeginChild("###play_menu.servers.child", ImVec2(0.0f, -2.0f * ImGui::GetFrameHeightWithSpacing())))
-            layout_servers();
-        ImGui::EndChild();
-        layout_servers_buttons();
-#endif /* ENABLE_SINGLEPLAYER */
 
         ImGui::PopStyleVar();
     }

@@ -22,7 +22,7 @@ static bool make_entity(entt::entity entity)
         entt::entity created = globals::registry.create(entity);
 
         if(created != entity) {
-            session::disconnect("protocol.chunk_entity_mismatch");
+            session::mp::disconnect("protocol.chunk_entity_mismatch");
             spdlog::critical("receive: chunk entity mismatch");
             return false;
         }
@@ -39,7 +39,7 @@ static void on_chunk_voxels_packet(const protocol::ChunkVoxels &packet)
 
             if(created != packet.entity) {
                 globals::registry.destroy(created);
-                session::disconnect("protocol.chunk_entity_mismatch");
+                session::mp::disconnect("protocol.chunk_entity_mismatch");
                 spdlog::critical("receive: chunk entity mismatch");
                 return;
             }

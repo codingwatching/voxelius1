@@ -10,7 +10,6 @@ set(BUILD_CLIENT ON CACHE BOOL "Build Voxelius client executable")
 set(BUILD_SERVER ON CACHE BOOL "Build Voxelius server executable")
 
 set(ENABLE_EXPERIMENTS OFF CACHE BOOL "Enable basic experimental features")
-set(ENABLE_SINGLEPLAYER OFF CACHE BOOL "Enable experimental singleplayer support")
 
 if(WIN32)
     # On Windows we cannot really guarantee the target system has

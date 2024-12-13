@@ -59,10 +59,6 @@
 #include "client/experiments.hh"
 #endif /* ENABLE_EXPERIMENTS */
 
-#if ENABLE_SINGLEPLAYER
-#include "client/singleplayer.hh"
-#endif /* ENABLE_SINGLEPLAYER */
-
 bool client_game::streamer_mode = false;
 bool client_game::vertical_sync = true;
 bool client_game::world_curvature = true;
@@ -369,19 +365,7 @@ void client_game::init_late(void)
 
 void client_game::deinit(void)
 {
-#if ENABLE_SINGLEPLAYER
-    if((globals::session_peer == nullptr) && globals::registry.valid(globals::player)) {
-        // Singleplayer subsystem is something of a
-        // wrapper on all the shared systems that should only
-        // be ticked server-side or client-side for singleplayer
-        singleplayer::shutdown();
-    }
-#endif /* ENABLE_SINGLEPLAYER */
-
-    if(globals::session_peer) {
-        session::disconnect("protocol.client_shutdown");
-        while(enet_host_service(globals::client_host, nullptr, 50));
-    }
+    session::deinit();
 
 #if ENABLE_EXPERIMENTS
     experiments::deinit();
@@ -413,9 +397,7 @@ void client_game::deinit(void)
 
 void client_game::update(void)
 {
-#if ENABLE_SINGLEPLAYER
-    singleplayer::update();
-#endif /* ENABLE_SINGLEPLAYER */
+    session::sp::update();
 
 #if ENABLE_EXPERIMENTS
     experiments::update();
@@ -440,6 +422,8 @@ void client_game::update(void)
 
 void client_game::update_late(void)
 {
+    session::sp::update_late();
+
 #if ENABLE_EXPERIMENTS
     experiments::update_late();
 #endif /* ENABLE_EXPERIMENTS */
@@ -454,7 +438,7 @@ void client_game::update_late(void)
 
     while(enet_host_service(globals::client_host, &event, 0) > 0) {
         if(event.type == ENET_EVENT_TYPE_CONNECT) {
-            session::send_login_request();
+            session::mp::send_login_request();
             continue;
         }
 
