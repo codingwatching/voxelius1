@@ -34,6 +34,8 @@ void player_list::init(void)
 
 void player_list::layout(void)
 {
+    if(globals::is_singleplayer)
+        return;
     if(globals::gui_screen != GUI_SCREEN_NONE)
         return;
     if(!globals::registry.valid(globals::player))

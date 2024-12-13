@@ -32,32 +32,47 @@ static std::deque<GuiChatMessage> history = {};
 static std::string chat_input = {};
 static bool needs_focus = false;
 
+static void append_text_message(const std::string &sender, const std::string &text)
+{
+    GuiChatMessage message = {};
+    message.spawn = globals::curtime;
+    message.text = fmt::format("[{}] {}", sender, text);
+    message.color = ImGui::GetStyleColorVec4(ImGuiCol_Text);
+    history.push_back(message);
+}
+
+static void append_player_join(const std::string &sender)
+{
+    GuiChatMessage message = {};
+    message.spawn = globals::curtime;
+    message.text = fmt::format("{} {}", sender, language::resolve("chat.client_join"));
+    message.color = ImGui::GetStyleColorVec4(ImGuiCol_DragDropTarget);
+    history.push_back(message);
+}
+
+static void append_player_leave(const std::string &sender, const std::string &reason)
+{
+    GuiChatMessage message = {};
+    message.spawn = globals::curtime;
+    message.text = fmt::format("{} {} ({})", sender, language::resolve("chat.client_left"), language::resolve(reason));
+    message.color = ImGui::GetStyleColorVec4(ImGuiCol_DragDropTarget);
+    history.push_back(message);
+}
+
 static void on_chat_message_packet(const protocol::ChatMessage &packet)
 {
     if(packet.type == protocol::ChatMessage::TEXT_MESSAGE) {
-        GuiChatMessage message = {};
-        message.spawn = globals::curtime;
-        message.text = fmt::format("[{}] {}", packet.sender, packet.message);
-        message.color = ImGui::GetStyleColorVec4(ImGuiCol_Text);
-        history.push_back(message);
+        append_text_message(packet.sender, packet.message);
         return;
     }
     
     if(packet.type == protocol::ChatMessage::PLAYER_JOIN) {
-        GuiChatMessage message = {};
-        message.spawn = globals::curtime;
-        message.text = fmt::format("{} {}", packet.sender, language::resolve("chat.client_join"));
-        message.color = ImGui::GetStyleColorVec4(ImGuiCol_DragDropTarget);
-        history.push_back(message);
+        append_player_join(packet.sender);
         return;
     }
     
     if(packet.type == protocol::ChatMessage::PLAYER_LEAVE) {
-        GuiChatMessage message = {};
-        message.spawn = globals::curtime;
-        message.text = fmt::format("{} {} ({})", packet.sender, language::resolve("chat.client_left"), language::resolve(packet.message));
-        message.color = ImGui::GetStyleColorVec4(ImGuiCol_DragDropTarget);
-        history.push_back(message);
+        append_player_leave(packet.sender, packet.message);
         return;
     }
 }
@@ -67,18 +82,18 @@ static void on_glfw_key(const GlfwKeyEvent &event)
     if(event.action == GLFW_PRESS) {
         if((event.key == GLFW_KEY_ENTER) && (globals::gui_screen == GUI_CHAT)) {
             if(!strtools::is_empty_or_whitespace(chat_input)) {
-                if(globals::session_peer) {
+                if(globals::is_singleplayer) {
+                    // For singleplayer, just append a new
+                    // chat message into the history without any
+                    // kind of packet manipulation since peer is null
+                    append_text_message(client_game::username, chat_input);
+                }
+                else {
                     protocol::ChatMessage packet = {};
                     packet.type = protocol::ChatMessage::TEXT_MESSAGE;
                     packet.sender = globals::session_username;
                     packet.message = chat_input;
                     protocol::send(globals::session_peer, nullptr, packet);
-                }
-                else {
-                    GuiChatMessage message = {};
-                    message.text = fmt::format("<{}> {}", client_game::username, chat_input);
-                    message.color = ImGui::GetStyleColorVec4(ImGuiCol_Text);
-                    history.push_back(message);
                 }
             }
 
