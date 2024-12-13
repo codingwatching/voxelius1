@@ -2,6 +2,8 @@
 #include "client/precompiled.hh"
 #include "client/session.hh"
 
+#include "common/config.hh"
+
 #include "shared/entity/head.hh"
 #include "shared/entity/player.hh"
 #include "shared/entity/transform.hh"
@@ -267,11 +269,8 @@ void session::sp::load_world(const std::string &world_dir)
 {
     session::invalidate();
 
-    worldgen::max_chunks_per_tick = 256U;
-    worldgen::seed = UINT64_C(42);
-
     worldgen::init();
-    worldgen::init_late();
+    worldgen::init_late(UINT64_C(42));
 
     constexpr int WSIZE = 16;
 

@@ -34,16 +34,19 @@ struct ProtoChunk final {
 
 static emhash8::HashMap<ChunkCoord, ProtoChunk> proto_chunks = {};
 
-unsigned int worldgen::max_chunks_per_tick = 64U;
-std::uint64_t worldgen::seed = UINT64_C(42);
+#if defined(NDEBUG)
+constexpr static unsigned int MAX_CHUNKS_PER_TICK = 128U;
+#else
+constexpr static unsigned int MAX_CHUNKS_PER_TICK = 32U;
+#endif
 
 void worldgen::init(void)
 {
 }
 
-void worldgen::init_late(void)
+void worldgen::init_late(std::uint64_t seed)
 {
-    overworld::init_late(worldgen::seed);
+    overworld::init_late(seed);
 }
 
 void worldgen::deinit(void)
@@ -53,13 +56,11 @@ void worldgen::deinit(void)
 
 void worldgen::update(void)
 {
-    worldgen::max_chunks_per_tick = cxpr::clamp(worldgen::max_chunks_per_tick, 16U, 256U);
-
     unsigned int count = 0U;
 
     auto it = proto_chunks.begin();
     while(it != proto_chunks.end()) {
-        if(++count >= worldgen::max_chunks_per_tick) {
+        if(++count >= MAX_CHUNKS_PER_TICK) {
             break;
         }
 

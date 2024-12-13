@@ -28,13 +28,14 @@
 static unsigned int listen_port = protocol::PORT;
 static unsigned int status_peers = 4U;
 
+static std::uint64_t worldgen_seed = UINT64_C(42);
+
 void server_game::init(void)
 {
     Config::add(globals::server_config, "game.listen_port", listen_port);
     Config::add(globals::server_config, "game.status_peers", status_peers);
 
-    Config::add(globals::server_config, "worldgen.max_chunks_per_tick", worldgen::max_chunks_per_tick);
-    Config::add(globals::server_config, "worldgen.seed", worldgen::seed);
+    Config::add(globals::server_config, "worldgen.seed", worldgen_seed);
 
     sessions::init();
 
@@ -71,7 +72,7 @@ void server_game::init_late(void)
 
     game_voxels::populate();
 
-    worldgen::init_late();
+    worldgen::init_late(worldgen_seed);
 
     constexpr int WSIZE = 16;
 
