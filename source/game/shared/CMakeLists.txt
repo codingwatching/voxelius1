@@ -23,6 +23,8 @@ add_library(shared STATIC
     "${CMAKE_CURRENT_LIST_DIR}/world/ray_dda.hh"
     "${CMAKE_CURRENT_LIST_DIR}/world/universe.cc"
     "${CMAKE_CURRENT_LIST_DIR}/world/universe.hh"
+    "${CMAKE_CURRENT_LIST_DIR}/world/unloader.cc"
+    "${CMAKE_CURRENT_LIST_DIR}/world/unloader.hh"
     "${CMAKE_CURRENT_LIST_DIR}/world/vdef.cc"
     "${CMAKE_CURRENT_LIST_DIR}/world/vdef.hh"
     "${CMAKE_CURRENT_LIST_DIR}/world/voxel.hh"

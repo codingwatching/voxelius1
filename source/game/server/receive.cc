@@ -2,6 +2,8 @@
 #include "server/precompiled.hh"
 #include "server/receive.hh"
 
+#include "mathlib/box3base.hh"
+
 #include "shared/entity/head.hh"
 #include "shared/entity/transform.hh"
 #include "shared/entity/velocity.hh"
@@ -11,6 +13,7 @@
 
 #include "shared/protocol.hh"
 
+#include "server/game.hh"
 #include "server/globals.hh"
 #include "server/sessions.hh"
 
@@ -82,8 +85,24 @@ static void on_set_voxel_packet(const protocol::SetVoxel &packet)
 
 static void on_request_chunk_packet(const protocol::RequestChunk &packet)
 {
-    if(auto chunk = universe::load_chunk(packet.coord)) {
-        protocol::send_chunk_voxels(packet.peer, nullptr, chunk->entity);
+    if(auto session = reinterpret_cast<const Session *>(packet.peer->data)) {
+        if(!globals::registry.valid(session->player)) {
+            // De-spawned sessions cannot request
+            // chunks from the server; that's cheating!!!
+            return;
+        }
+
+        if(auto transform = globals::registry.try_get<TransformComponent>(session->player)) {
+            auto view_box = Box3base<ChunkCoord::value_type>();
+            view_box.min = transform->position.chunk - server_game::view_distance;
+            view_box.max = transform->position.chunk + server_game::view_distance;
+
+            if(Box3base<ChunkCoord::value_type>::contains(view_box, packet.coord)) {
+                if(auto chunk = universe::load_chunk(packet.coord)) {
+                    protocol::send_chunk_voxels(packet.peer, nullptr, chunk->entity);
+                }
+            }
+        }
     }
 }
 

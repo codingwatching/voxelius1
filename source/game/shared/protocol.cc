@@ -364,20 +364,24 @@ void protocol::receive(const ENetPacket *packet, ENetPeer *peer)
             globals::dispatcher.trigger(set_voxel);
             break;
         case protocol::RemoveEntity::ID:
+            request_chunk.peer = peer;
             remove_entity.entity = static_cast<entt::entity>(PacketBuffer::read_UI64(read_buffer));
             globals::dispatcher.trigger(remove_entity);
             break;
         case protocol::EntityPlayer::ID:
+            request_chunk.peer = peer;
             entity_player.entity = static_cast<entt::entity>(PacketBuffer::read_UI64(read_buffer));
             globals::dispatcher.trigger(entity_player);
             break;
         case protocol::PlayerListUpdate::ID:
+            request_chunk.peer = peer;
             player_list_update.names.resize(PacketBuffer::read_UI16(read_buffer));
             for(std::size_t i = 0; i < player_list_update.names.size(); ++i)
                 player_list_update.names[i] = PacketBuffer::read_string(read_buffer);
             globals::dispatcher.trigger(player_list_update);
             break;
         case protocol::RequestChunk::ID:
+            request_chunk.peer = peer;
             request_chunk.coord[0] = PacketBuffer::read_UI32(read_buffer);
             request_chunk.coord[1] = PacketBuffer::read_UI32(read_buffer);
             request_chunk.coord[2] = PacketBuffer::read_UI32(read_buffer);

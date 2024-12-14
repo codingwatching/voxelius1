@@ -14,21 +14,10 @@
 
 static ChunkCoord cached_cpos = {};
 static unsigned int cached_dist = {};
-static std::unordered_set<ChunkCoord> requests = {};
-static std::vector<ChunkCoord> sorted_requests = {};
+static std::vector<ChunkCoord> requests = {};
 
 static void request_chunk(const ChunkCoord &cpos)
 {
-    if(requests.find(cpos) != requests.cend()) {
-        // The chunk has been requested and probably
-        // even exists somewhere; FIXME: can we instead of
-        // just throwing it away add a timeout at which the
-        // client can request new chunks to be generated?
-        return;
-    }
-
-    requests.insert(cpos);
-
     if(globals::is_singleplayer) {
         universe::load_chunk(cpos);
         return;
@@ -49,7 +38,7 @@ static void request_new_chunks(void)
     auto cmin = cached_cpos - cached_dist;
     auto cmax = cached_cpos + cached_dist;
 
-    sorted_requests.clear();
+    requests.clear();
 
     for(auto cx = cmin[0]; cx <= cmax[0]; ++cx)
     for(auto cy = cmin[1]; cy <= cmax[1]; ++cy)
@@ -60,10 +49,10 @@ static void request_new_chunks(void)
             continue;
         }
 
-        sorted_requests.push_back(ChunkCoord(cx, cy, cz));
+        requests.push_back(ChunkCoord(cx, cy, cz));
     }
 
-    std::sort(sorted_requests.begin(), sorted_requests.end(), [](const ChunkCoord &ca, const ChunkCoord &cb) {
+    std::sort(requests.begin(), requests.end(), [](const ChunkCoord &ca, const ChunkCoord &cb) {
         auto dir_a = ca - cached_cpos;
         auto dir_b = cb - cached_cpos;
 
@@ -118,7 +107,7 @@ void chunk_visibility::update_chunks(void)
 void chunk_visibility::cleanup(void)
 {
     requests.clear();
-    sorted_requests.clear();
+    requests.clear();
 }
 
 void chunk_visibility::update(void)
@@ -132,14 +121,14 @@ void chunk_visibility::update(void)
         }
         else {
             for(int i = 0; i < 16; ++i) {
-                if(sorted_requests.empty()) {
+                if(requests.empty()) {
                     // Done sending requests
                     break;
                 }
 
-                request_chunk(sorted_requests.back());
+                request_chunk(requests.back());
 
-                sorted_requests.pop_back();
+                requests.pop_back();
             }
         }
         

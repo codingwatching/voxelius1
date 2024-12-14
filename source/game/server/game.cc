@@ -15,6 +15,7 @@
 
 #include "shared/world/game_voxels.hh"
 #include "shared/world/universe.hh"
+#include "shared/world/unloader.hh"
 #include "shared/world/world.hh"
 
 #include "shared/worldgen/worldgen.hh"
@@ -29,6 +30,8 @@
 #include "server/status.hh"
 
 
+unsigned int server_game::view_distance = 4U;
+
 static unsigned int listen_port = protocol::PORT;
 static unsigned int status_peers = 4U;
 
@@ -38,6 +41,7 @@ void server_game::init(void)
 {
     Config::add(globals::server_config, "game.listen_port", listen_port);
     Config::add(globals::server_config, "game.status_peers", status_peers);
+    Config::add(globals::server_config, "game.view_distance", server_game::view_distance);
 
     Config::add(globals::server_config, "worldgen.seed", worldgen_seed);
 
@@ -54,6 +58,8 @@ void server_game::init(void)
 
 void server_game::init_late(void)
 {
+    server_game::view_distance = cxpr::clamp(server_game::view_distance, 2U, 32U);
+
     sessions::init_late();
 
     listen_port = cxpr::clamp<unsigned int>(listen_port, 1024U, UINT16_MAX);
@@ -80,6 +86,8 @@ void server_game::init_late(void)
     if(!cmdline::get_value("universe", universe_name))
         universe_name = "save";
     universe::setup(universe_name);
+
+    unloader::init_late(server_game::view_distance);
 }
 
 void server_game::deinit(void)
@@ -97,11 +105,11 @@ void server_game::deinit(void)
 
 void server_game::update(void)
 {
-    
+
 }
 
 void server_game::update_late(void)
-{    
+{
     ENetEvent event = {};
 
     while(enet_host_service(globals::server_host, &event, 0) > 0) {
@@ -117,4 +125,6 @@ void server_game::update_late(void)
             continue;
         }
     }
+
+    unloader::update_late();
 }

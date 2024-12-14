@@ -15,6 +15,7 @@
 #include "shared/world/chunk_coord.hh"
 #include "shared/world/local_coord.hh"
 #include "shared/world/universe.hh"
+#include "shared/world/unloader.hh"
 #include "shared/world/vdef.hh"
 #include "shared/world/voxel_coord.hh"
 #include "shared/world/world.hh"
@@ -32,6 +33,7 @@
 
 #include "client/game.hh"
 #include "client/globals.hh"
+#include "client/view.hh"
 
 
 static void on_login_response_packet(const protocol::LoginResponse &packet)
@@ -270,7 +272,9 @@ void session::sp::update(void)
 
 void session::sp::update_late(void)
 {
-
+    if(globals::is_singleplayer && globals::registry.valid(globals::player)) {
+        unloader::update_late();
+    }
 }
 
 void session::sp::load_world(const std::string &universe_directory)
@@ -278,6 +282,8 @@ void session::sp::load_world(const std::string &universe_directory)
     session::invalidate();
 
     universe::setup("debug");
+
+    unloader::init_late(view::max_distance);
 
     globals::player = globals::registry.create();
     globals::registry.emplace<HeadComponent>(globals::player);
