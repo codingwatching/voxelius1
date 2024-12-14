@@ -15,9 +15,10 @@
 #include "shared/event/chunk_update.hh"
 #include "shared/event/voxel_set.hh"
 
-#include "shared/chunk.hh"
+#include "shared/world/chunk.hh"
+#include "shared/world/vdef.hh"
+
 #include "shared/protocol.hh"
-#include "shared/vdef.hh"
 
 #include "server/globals.hh"
 

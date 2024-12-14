@@ -12,21 +12,26 @@
 #include "shared/event/chunk_update.hh"
 #include "shared/event/voxel_set.hh"
 
-#include "shared/chunk_coord.hh"
-#include "shared/local_coord.hh"
-#include "shared/protocol.hh"
-#include "shared/universe.hh"
-#include "shared/vdef.hh"
-#include "shared/voxel_coord.hh"
-#include "shared/world.hh"
-#include "shared/worldgen.hh"
+#include "shared/world/chunk_coord.hh"
+#include "shared/world/local_coord.hh"
+#include "shared/world/universe.hh"
+#include "shared/world/vdef.hh"
+#include "shared/world/voxel_coord.hh"
+#include "shared/world/world.hh"
 
-#include "client/chat.hh"
+#include "shared/worldgen/worldgen.hh"
+
+#include "shared/protocol.hh"
+
+#include "client/gui/chat.hh"
+#include "client/gui/gui_screen.hh"
+#include "client/gui/message_box.hh"
+#include "client/gui/progress.hh"
+
+#include "client/world/chunk_visibility.hh"
+
 #include "client/game.hh"
 #include "client/globals.hh"
-#include "client/gui_screen.hh"
-#include "client/message_box.hh"
-#include "client/progress.hh"
 
 
 static void on_login_response_packet(const protocol::LoginResponse &packet)
@@ -59,6 +64,7 @@ static void on_disconnect_packet(const protocol::Disconnect &packet)
 
     globals::player = entt::null;
     globals::registry.clear();
+    chunk_visibility::cleanup();
 
     message_box::reset();
     message_box::set_title("disconnected.disconnected");
@@ -168,6 +174,7 @@ void session::invalidate(void)
     if(globals::registry.valid(globals::player))
         globals::player = entt::null;
     globals::registry.clear();
+    chunk_visibility::cleanup();
 }
 
 void session::mp::connect(const std::string &host, std::uint16_t port)
@@ -211,6 +218,7 @@ void session::mp::connect(const std::string &host, std::uint16_t port)
         if(globals::registry.valid(globals::player))
             globals::player = entt::null;
         globals::registry.clear();
+        chunk_visibility::cleanup();
 
         globals::gui_screen = GUI_PLAY_MENU;
     });
@@ -236,6 +244,7 @@ void session::mp::disconnect(const std::string &reason)
 
         globals::player = entt::null;
         globals::registry.clear();
+        chunk_visibility::cleanup();
         
         client_chat::clear();
     }
@@ -256,9 +265,7 @@ void session::mp::send_login_request(void)
 
 void session::sp::update(void)
 {
-    if(globals::is_singleplayer && globals::registry.valid(globals::player)) {
-        worldgen::update();
-    }
+
 }
 
 void session::sp::update_late(void)
@@ -270,17 +277,7 @@ void session::sp::load_world(const std::string &universe_directory)
 {
     session::invalidate();
 
-    universe::setup("save/debug");
-
-    constexpr int WSIZE = 16;
-
-    for(int x = -WSIZE; x < WSIZE; x += 1) {
-        for(int z = -WSIZE; z < WSIZE; z += 1) {
-            for(int y = -3; y < 4; y += 1) {
-                universe::load_chunk(ChunkCoord(x, y, z));
-            }
-        }
-    }
+    universe::setup("debug");
 
     globals::player = globals::registry.create();
     globals::registry.emplace<HeadComponent>(globals::player);

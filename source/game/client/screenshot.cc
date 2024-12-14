@@ -8,8 +8,9 @@
 
 #include "client/event/glfw_key.hh"
 
+#include "client/gui/settings.hh"
+
 #include "client/globals.hh"
-#include "client/settings.hh"
 #include "client/toggles.hh"
 
 

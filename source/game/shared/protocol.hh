@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: BSD-2-Clause
 #pragma once
 #include "mathlib/vec3angles.hh"
-#include "shared/chunk.hh"
-#include "shared/world_coord.hh"
+#include "shared/world/chunk.hh"
+#include "shared/world/world_coord.hh"
 
 namespace protocol
 {
 constexpr static std::size_t MAX_CHAT = 16384;
 constexpr static std::size_t MAX_USERNAME = 64;
 constexpr static std::uint16_t PORT = 43103;
-constexpr static std::uint32_t VERSION = 9;
+constexpr static std::uint32_t VERSION = 10;
 } // namespace protocol
 
 namespace protocol
@@ -39,6 +39,7 @@ struct SetVoxel;
 struct RemoveEntity;
 struct EntityPlayer;
 struct PlayerListUpdate;
+struct RequestChunk;
 } // namespace protocol
 
 namespace protocol
@@ -58,6 +59,7 @@ void send(ENetPeer *peer, ENetHost *host, const SetVoxel &packet);
 void send(ENetPeer *peer, ENetHost *host, const RemoveEntity &packet);
 void send(ENetPeer *peer, ENetHost *host, const EntityPlayer &packet);
 void send(ENetPeer *peer, ENetHost *host, const PlayerListUpdate &packet);
+void send(ENetPeer *peer, ENetHost *host, const RequestChunk &packet);
 } // namespace protocol
 
 namespace protocol
@@ -167,4 +169,8 @@ struct protocol::EntityPlayer final : public protocol::Base<0x000D> {
 
 struct protocol::PlayerListUpdate final : public protocol::Base<0x000E> {
     std::vector<std::string> names {};
+};
+
+struct protocol::RequestChunk final : public protocol::Base<0x000F> {
+    ChunkCoord coord {};
 };

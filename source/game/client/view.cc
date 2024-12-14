@@ -4,8 +4,9 @@
 
 #include "common/config.hh"
 
+#include "client/gui/settings.hh"
+
 #include "client/globals.hh"
-#include "client/settings.hh"
 
 #include "shared/entity/head.hh"
 #include "shared/entity/transform.hh"
@@ -33,7 +34,7 @@ void view::init(void)
     Config::add(globals::client_config, "view.max_distance", view::max_distance);
 
     settings::add_slider(1, settings::GENERAL, "view.vertical_fov", view::vertical_fov, 45.0, 120.0f, true, "%.0f");
-    settings::add_slider(0, settings::VIDEO, "view.max_distance", view::max_distance, 2U, 64U, false);
+    settings::add_slider(0, settings::VIDEO, "view.max_distance", view::max_distance, 2U, 32U, false);
 
     reset();
 }
@@ -56,7 +57,7 @@ void view::update(void)
     Vec3angles::vectors(view::angles, &view::direction, nullptr, nullptr);
 
     const auto z_near = 0.01f;
-    const auto z_far = static_cast<float>(CHUNK_SIZE * cxpr::clamp(view::max_distance, 2U, 64U));
+    const auto z_far = static_cast<float>(CHUNK_SIZE * cxpr::clamp(view::max_distance, 2U, 32U));
     Mat4x4f proj = Mat4x4f::proj_persp(cxpr::radians(view::vertical_fov), globals::aspect, z_near, z_far);
     Mat4x4f view = Mat4x4f::view_psrc(view::position.local, view::angles);
 

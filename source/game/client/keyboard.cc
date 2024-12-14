@@ -8,8 +8,9 @@
 
 #include "client/event/glfw_key.hh"
 
+#include "client/gui/settings.hh"
+
 #include "client/globals.hh"
-#include "client/settings.hh"
 
 
 constexpr static unsigned int KEY_BIT_NULL      = 0x0000U;

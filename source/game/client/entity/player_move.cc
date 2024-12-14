@@ -8,8 +8,9 @@
 #include "shared/entity/transform.hh"
 #include "shared/entity/velocity.hh"
 
+#include "client/gui/gui_screen.hh"
+
 #include "client/globals.hh"
-#include "client/gui_screen.hh"
 
 
 constexpr static float PLAYER_MOVE_SPEED = 16.0f;

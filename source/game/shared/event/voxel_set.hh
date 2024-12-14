@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: BSD-2-Clause
 #pragma once
-#include "shared/chunk.hh"
-#include "shared/local_coord.hh"
-#include "shared/voxel_coord.hh"
+#include "shared/world/chunk.hh"
+#include "shared/world/local_coord.hh"
+#include "shared/world/voxel_coord.hh"
 
 struct VoxelSetEvent final {
     std::size_t index {};

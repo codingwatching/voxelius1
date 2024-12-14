@@ -6,8 +6,10 @@
 #include "shared/entity/transform.hh"
 #include "shared/entity/velocity.hh"
 
+#include "shared/world/universe.hh"
+#include "shared/world/world.hh"
+
 #include "shared/protocol.hh"
-#include "shared/world.hh"
 
 #include "server/globals.hh"
 #include "server/sessions.hh"
@@ -67,7 +69,7 @@ static void on_set_voxel_packet(const protocol::SetVoxel &packet)
         const auto lpos = VoxelCoord::to_local(packet.coord);
         const auto index = LocalCoord::to_index(lpos);
 
-        Chunk *chunk = Chunk::create(ChunkType::Inhabited);
+        Chunk *chunk = Chunk::create();
         chunk->entity = globals::registry.create();
         chunk->voxels[index] = packet.voxel;
 
@@ -78,10 +80,18 @@ static void on_set_voxel_packet(const protocol::SetVoxel &packet)
     }
 }
 
+static void on_request_chunk_packet(const protocol::RequestChunk &packet)
+{
+    if(auto chunk = universe::load_chunk(packet.coord)) {
+        protocol::send_chunk_voxels(packet.peer, nullptr, chunk->entity);
+    }
+}
+
 void server_recieve::init(void)
 {
     globals::dispatcher.sink<protocol::EntityTransform>().connect<&on_entity_transform_packet>();
     globals::dispatcher.sink<protocol::EntityVelocity>().connect<&on_entity_velocity_packet>();
     globals::dispatcher.sink<protocol::EntityHead>().connect<&on_entity_head_packet>();
     globals::dispatcher.sink<protocol::SetVoxel>().connect<&on_set_voxel_packet>();
+    globals::dispatcher.sink<protocol::RequestChunk>().connect<&on_request_chunk_packet>();
 }

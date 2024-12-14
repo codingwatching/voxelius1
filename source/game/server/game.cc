@@ -13,12 +13,14 @@
 #include "shared/entity/transform.hh"
 #include "shared/entity/velocity.hh"
 
-#include "shared/game_voxels.hh"
+#include "shared/world/game_voxels.hh"
+#include "shared/world/universe.hh"
+#include "shared/world/world.hh"
+
+#include "shared/worldgen/worldgen.hh"
+
 #include "shared/motd.hh"
 #include "shared/protocol.hh"
-#include "shared/universe.hh"
-#include "shared/world.hh"
-#include "shared/worldgen.hh"
 
 #include "server/chat.hh"
 #include "server/globals.hh"
@@ -74,30 +76,10 @@ void server_game::init_late(void)
     game_voxels::populate();
 
     std::string universe_name = {};
-    
+
     if(!cmdline::get_value("universe", universe_name))
         universe_name = "save";
     universe::setup(universe_name);
-
-    constexpr int WSIZE = 16;
-
-#if 1
-    for(int x = -WSIZE; x < WSIZE; x += 1) {
-        for(int z = -WSIZE; z < WSIZE; z += 1) {
-            for(int y = -3; y < 4; y += 1) {
-                universe::load_chunk(ChunkCoord(x, y, z));
-            }
-        }
-    }
-#else
-    for(int x = -WSIZE; x < WSIZE; x += 1)
-    for(int z = -WSIZE; z < WSIZE; z += 1) {
-        Chunk *chunk = Chunk::create(ChunkType::Generic, globals::registry.create());
-        chunk->voxels.fill(game_voxels::vtest_ck);
-        world::emplace_or_replace(ChunkCoord(x, -2, z), chunk);
-        world::emplace_or_replace(ChunkCoord(x, -1, z), Chunk::create(ChunkType::Generic, globals::registry.create()));
-    }
-#endif
 }
 
 void server_game::deinit(void)
@@ -115,7 +97,7 @@ void server_game::deinit(void)
 
 void server_game::update(void)
 {
-    worldgen::update();
+    
 }
 
 void server_game::update_late(void)

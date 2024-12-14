@@ -235,6 +235,16 @@ void protocol::send(ENetPeer *peer, ENetHost *host, const protocol::PlayerListUp
     basic_send(peer, host, enet_packet_create(write_buffer.vector.data(), write_buffer.vector.size(), ENET_PACKET_FLAG_RELIABLE));
 }
 
+void protocol::send(ENetPeer *peer, ENetHost *host, const protocol::RequestChunk &packet)
+{
+    PacketBuffer::setup(write_buffer);
+    PacketBuffer::write_UI16(write_buffer, protocol::RequestChunk::ID);
+    PacketBuffer::write_I32(write_buffer, packet.coord[0]);
+    PacketBuffer::write_I32(write_buffer, packet.coord[1]);
+    PacketBuffer::write_I32(write_buffer, packet.coord[2]);
+    basic_send(peer, host, enet_packet_create(write_buffer.vector.data(), write_buffer.vector.size(), ENET_PACKET_FLAG_RELIABLE));
+}
+
 void protocol::receive(const ENetPacket *packet, ENetPeer *peer)
 {
     PacketBuffer::setup(read_buffer, packet->data, packet->dataLength);
@@ -254,6 +264,7 @@ void protocol::receive(const ENetPacket *packet, ENetPeer *peer)
     protocol::RemoveEntity remove_entity = {};
     protocol::EntityPlayer entity_player = {};
     protocol::PlayerListUpdate player_list_update = {};
+    protocol::RequestChunk request_chunk = {};
     
     switch(PacketBuffer::read_UI16(read_buffer)) {
         case protocol::StatusRequest::ID:
@@ -365,6 +376,12 @@ void protocol::receive(const ENetPacket *packet, ENetPeer *peer)
             for(std::size_t i = 0; i < player_list_update.names.size(); ++i)
                 player_list_update.names[i] = PacketBuffer::read_string(read_buffer);
             globals::dispatcher.trigger(player_list_update);
+            break;
+        case protocol::RequestChunk::ID:
+            request_chunk.coord[0] = PacketBuffer::read_UI32(read_buffer);
+            request_chunk.coord[1] = PacketBuffer::read_UI32(read_buffer);
+            request_chunk.coord[2] = PacketBuffer::read_UI32(read_buffer);
+            globals::dispatcher.trigger(request_chunk);
             break;
     }
 }

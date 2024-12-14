@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BSD-2-Clause
 #pragma once
-#include "shared/world_coord.hh"
 #include "mathlib/vec3angles.hh"
+#include "shared/world/world_coord.hh"
 
 class TransformComponent final {
 public:

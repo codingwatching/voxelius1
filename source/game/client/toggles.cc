@@ -6,8 +6,9 @@
 
 #include "client/event/glfw_key.hh"
 
+#include "client/gui/language.hh"
+
 #include "client/globals.hh"
-#include "client/language.hh"
 
 
 bool toggles::is_sequence_await = false;

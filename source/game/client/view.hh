@@ -2,7 +2,7 @@
 #pragma once
 #include "mathlib/mat4x4f.hh"
 #include "mathlib/vec3angles.hh"
-#include "shared/world_coord.hh"
+#include "shared/world/world_coord.hh"
 
 namespace view
 {

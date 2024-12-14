@@ -4,15 +4,17 @@
 
 #if ENABLE_EXPERIMENTS
 
-#include "shared/game_voxels.hh"
-#include "shared/world.hh"
+#include "shared/world/game_voxels.hh"
+#include "shared/world/world.hh"
 
 #include "client/event/glfw_mouse_button.hh"
 #include "client/event/glfw_scroll.hh"
 
-#include "client/chat.hh"
+#include "client/gui/chat.hh"
+
+#include "client/world/player_target.hh"
+
 #include "client/globals.hh"
-#include "client/player_target.hh"
 
 
 static std::size_t place_index = 0;

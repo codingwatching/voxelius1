@@ -10,8 +10,9 @@
 
 #include "client/event/glfw_cursor_pos.hh"
 
+#include "client/gui/settings.hh"
+
 #include "client/globals.hh"
-#include "client/settings.hh"
 
 
 static float previous_xpos = 0.0f;

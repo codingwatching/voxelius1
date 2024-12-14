@@ -11,47 +11,50 @@
 #include "shared/entity/transform.hh"
 #include "shared/entity/velocity.hh"
 
-#include "shared/game_voxels.hh"
+#include "shared/world/game_voxels.hh"
+#include "shared/world/ray_dda.hh"
+#include "shared/world/world.hh"
+
 #include "shared/protocol.hh"
-#include "shared/ray_dda.hh"
-#include "shared/world.hh"
 
 #include "client/entity/player_look.hh"
 #include "client/entity/player_move.hh"
 
 #include "client/event/glfw_framebuffer_size.hh"
 
-#include "client/background.hh"
+#include "client/gui/background.hh"
+#include "client/gui/chat.hh"
+#include "client/gui/crosshair.hh"
+#include "client/gui/gui_screen.hh"
+#include "client/gui/language.hh"
+#include "client/gui/main_menu.hh"
+#include "client/gui/message_box.hh"
+#include "client/gui/metrics.hh"
+#include "client/gui/play_menu.hh"
+#include "client/gui/player_list.hh"
+#include "client/gui/progress.hh"
+#include "client/gui/settings.hh"
+#include "client/gui/splash.hh"
+
+#include "client/world/chunk_mesher.hh"
+#include "client/world/chunk_renderer.hh"
+#include "client/world/chunk_visibility.hh"
+#include "client/world/outline.hh"
+#include "client/world/player_target.hh"
+#include "client/world/skybox.hh"
+#include "client/world/voxel_anims.hh"
+#include "client/world/voxel_atlas.hh"
+
 #include "client/const.hh"
-#include "client/chat.hh"
-#include "client/chunk_mesher.hh"
-#include "client/chunk_renderer.hh"
-#include "client/chunk_visibility.hh"
-#include "client/crosshair.hh"
 #include "client/globals.hh"
-#include "client/gui_screen.hh"
 #include "client/keyboard.hh"
 #include "client/keynames.hh"
-#include "client/language.hh"
-#include "client/main_menu.hh"
-#include "client/message_box.hh"
-#include "client/metrics.hh"
 #include "client/mouse.hh"
-#include "client/outline.hh"
-#include "client/play_menu.hh"
-#include "client/player_list.hh"
-#include "client/player_target.hh"
-#include "client/progress.hh"
 #include "client/receive.hh"
 #include "client/screenshot.hh"
 #include "client/session.hh"
-#include "client/settings.hh"
-#include "client/skybox.hh"
-#include "client/splash.hh"
 #include "client/toggles.hh"
 #include "client/view.hh"
-#include "client/voxel_anims.hh"
-#include "client/voxel_atlas.hh"
 
 #if ENABLE_EXPERIMENTS
 #include "shared/entity/head.hh"
@@ -157,7 +160,7 @@ void client_game::init(void)
     splash::render(std::string());
 
     client_game::player_uid = epoch::microseconds();
-    
+
     Config::add(globals::client_config, "game.streamer_mode", client_game::streamer_mode);
     Config::add(globals::client_config, "game.vertical_sync", client_game::vertical_sync);
     Config::add(globals::client_config, "game.world_curvature", client_game::world_curvature);

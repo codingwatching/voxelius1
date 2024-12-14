@@ -4,7 +4,7 @@
 
 #include "common/config.hh"
 
-#include "client/gui_screen.hh"
+#include "client/gui/gui_screen.hh"
 
 
 Config globals::client_config = {};

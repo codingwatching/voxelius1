@@ -7,12 +7,14 @@
 #include "shared/entity/transform.hh"
 #include "shared/entity/velocity.hh"
 
-#include "shared/protocol.hh"
-#include "shared/world.hh"
+#include "shared/world/world.hh"
 
-#include "client/chat.hh"
+#include "shared/protocol.hh"
+
+#include "client/gui/chat.hh"
+#include "client/gui/gui_screen.hh"
+
 #include "client/globals.hh"
-#include "client/gui_screen.hh"
 #include "client/session.hh"
 
 
@@ -45,7 +47,7 @@ static void on_chunk_voxels_packet(const protocol::ChunkVoxels &packet)
             }
         }
 
-        Chunk *chunk = Chunk::create(ChunkType::Generic);
+        Chunk *chunk = Chunk::create();
         chunk->entity = packet.entity;
         chunk->voxels = packet.voxels;
 
