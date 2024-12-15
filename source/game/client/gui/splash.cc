@@ -6,6 +6,7 @@
 
 #include "common/epoch.hh"
 #include "common/cmdline.hh"
+#include "common/fstools.hh"
 #include "common/image.hh"
 
 #include "client/event/glfw_key.hh"
@@ -19,8 +20,9 @@
 
 constexpr static ImGuiWindowFlags WINDOW_FLAGS = ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoDecoration;
 
+constexpr static int SPLASH_COUNT = 4;
 constexpr static std::size_t DELAY_MICROSECONDS = 2000000;
-constexpr static const char *TEXTURE_PATH = "textures/gui/untolabs.png";
+constexpr static const char *SPLASH_FORMAT = "textures/gui/untolabs.{}.png";
 
 static GLuint texture;
 static float texture_aspect;
@@ -53,7 +55,13 @@ void splash::init(void)
         return;
     }
 
-    if(!image.load_rgba(image, TEXTURE_PATH, false)) {
+    std::random_device randev = {};
+    std::uniform_int_distribution<int> dist(0, SPLASH_COUNT - 1);
+    auto path = fmt::format(SPLASH_FORMAT, dist(randev));
+
+    if(!image.load_rgba(image, path, false)) {
+        spdlog::warn("splash: {}: {}", path, fstools::error());
+
         texture = 0;
         texture_aspect = 0.0f;
         texture_alpha = 0.0f;
