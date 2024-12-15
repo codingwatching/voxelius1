@@ -13,6 +13,7 @@
 
 #include "shared/world/game_voxels.hh"
 #include "shared/world/ray_dda.hh"
+#include "shared/world/unloader.hh"
 #include "shared/world/world.hh"
 
 #include "shared/protocol.hh"
@@ -212,6 +213,8 @@ void client_game::init(void)
     outline::init();
 
     world::init();
+
+    unloader::init();
 
     ImGuiStyle &style = ImGui::GetStyle();
 

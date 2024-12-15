@@ -5,7 +5,6 @@
 #include "shared/entity/chunk.hh"
 
 #include "shared/event/chunk_create.hh"
-#include "shared/event/chunk_remove.hh"
 #include "shared/event/chunk_update.hh"
 #include "shared/event/voxel_set.hh"
 

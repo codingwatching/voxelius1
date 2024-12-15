@@ -5,8 +5,12 @@
 #include "mathlib/box3base.hh"
 
 #include "shared/entity/chunk.hh"
+#include "shared/entity/inhabited.hh"
 #include "shared/entity/player.hh"
 #include "shared/entity/transform.hh"
+
+#include "shared/event/chunk_update.hh"
+#include "shared/event/voxel_set.hh"
 
 #include "shared/world/universe.hh"
 
@@ -18,6 +22,22 @@ using Box3chunk = Box3base<ChunkCoord::value_type>;
 
 static unsigned int unload_threshold = 0U;
 static std::vector<Box3chunk> player_boxes = {};
+
+static void on_chunk_update(const ChunkUpdateEvent &event)
+{
+    globals::registry.emplace_or_replace<InhabitedComponent>(event.chunk->entity);
+}
+
+static void on_voxel_set(const VoxelSetEvent &event)
+{
+    globals::registry.emplace_or_replace<InhabitedComponent>(event.chunk->entity);
+}
+
+void unloader::init(void)
+{
+    globals::dispatcher.sink<ChunkUpdateEvent>().connect<&on_chunk_update>();
+    globals::dispatcher.sink<VoxelSetEvent>().connect<&on_voxel_set>();
+}
 
 void unloader::init_late(unsigned int view_distance)
 {
@@ -57,7 +77,10 @@ void unloader::update_late(void)
             continue;
         }
 
-        universe::save_chunk(chunk.coord);
+        if(globals::registry.any_of<InhabitedComponent>(entity)) {
+            // Only store inhabited chunks on disk
+            universe::save_chunk(chunk.coord);
+        }
 
         // On server-side this will also notify all the
         // connected clients that this specific chunk has been

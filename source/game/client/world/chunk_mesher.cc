@@ -7,7 +7,6 @@
 #include "shared/entity/chunk.hh"
 
 #include "shared/event/chunk_create.hh"
-#include "shared/event/chunk_remove.hh"
 #include "shared/event/chunk_update.hh"
 #include "shared/event/voxel_set.hh"
 
@@ -315,14 +314,6 @@ static void on_chunk_create(const ChunkCreateEvent &event)
     }
 }
 
-static void on_chunk_remove(const ChunkRemoveEvent &event)
-{
-    const auto it = workers.find(event.coord);
-    if(it == workers.cend())
-        return;
-    it->second->is_cancelled = true;
-}
-
 static void on_chunk_update(const ChunkUpdateEvent &event)
 {
     const std::array<ChunkCoord, 6> neighbours = {
@@ -376,7 +367,6 @@ static void on_voxel_set(const VoxelSetEvent &event)
 void chunk_mesher::init(void)
 {
     globals::dispatcher.sink<ChunkCreateEvent>().connect<&on_chunk_create>();
-    globals::dispatcher.sink<ChunkRemoveEvent>().connect<&on_chunk_remove>();
     globals::dispatcher.sink<ChunkUpdateEvent>().connect<&on_chunk_update>();
     globals::dispatcher.sink<VoxelSetEvent>().connect<&on_voxel_set>();
 }

@@ -8,6 +8,7 @@
 #include "common/packet_buffer.hh"
 
 #include "shared/entity/chunk.hh"
+#include "shared/entity/inhabited.hh"
 
 #include "shared/world/world.hh"
 
@@ -96,6 +97,9 @@ Chunk *universe::load_chunk(const ChunkCoord &cpos)
 
         world::emplace_or_replace(cpos, chunk);
 
+        // Ensure the loaded chunk is marked as inhabited as-is
+        globals::registry.emplace_or_replace<InhabitedComponent>(chunk->entity);
+
         return chunk;
     }
 
@@ -132,9 +136,9 @@ void universe::save_chunk(const ChunkCoord &cpos)
 
 void universe::save_all_chunks(void)
 {
-    auto view = globals::registry.view<ChunkComponent>();
+    auto group = globals::registry.group(entt::get<ChunkComponent, InhabitedComponent>);
 
-    for(auto [entity, chunk] : view.each()) {
+    for(auto [entity, chunk] : group.each()) {
         universe::save_chunk(chunk.coord);
     }
 }

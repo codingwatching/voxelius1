@@ -54,6 +54,8 @@ void server_game::init(void)
     server_recieve::init();
 
     world::init();
+
+    unloader::init();
 }
 
 void server_game::init_late(void)
