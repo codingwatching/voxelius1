@@ -1,5 +1,20 @@
 cmake_minimum_required(VERSION 3.15 FATAL_ERROR)
-project(VOXELIUS LANGUAGES CXX VERSION 0.0.1.2451)
+project(voxelius LANGUAGES CXX VERSION 0.0.1.2451)
+
+set(CPACK_PACKAGE_NAME "voxelius")
+set(CPACK_PACKAGE_VENDOR "untolabs")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Block game on steroids")
+set(CPACK_PACKAGE_CONTACT "https://github.com/untolabs/voxelius/issues")
+
+set(CPACK_PACKAGE_VERSION ${PROJECT_VERSION})
+set(CPACK_PACKAGE_VERSION_MAJOR ${PROJECT_VERSION_MAJOR})
+set(CPACK_PACKAGE_VERSION_MINOR ${PROJECT_VERSION_MINOR})
+set(CPACK_PACKAGE_VERSION_PATCH ${PROJECT_VERSION_PATCH})
+set(CPACK_PACKAGE_VERSION_TWEAK ${PROJECT_VERSION_TWEAK})
+
+set(CPACK_PACKAGE_DIRECTORY "${CMAKE_BINARY_DIR}")
+set(CPACK_PACKAGE_INSTALL_DIRECTORY "${CPACK_PACKAGE_NAME}")
+set(CPACK_RESOURCE_FILE_LICENSE "${PROJECT_SOURCE_DIR}/LICENSE")
 
 # This enables solution directories if the feature is applicable
 # to the target build environment. This allows built-in pseudo-targets
@@ -11,21 +26,9 @@ set(BUILD_SERVER ON CACHE BOOL "Build Voxelius server executable")
 
 set(ENABLE_EXPERIMENTS OFF CACHE BOOL "Enable basic experimental features")
 
-if(WIN32)
-    # On Windows we cannot really guarantee the target system has
-    # <LIBRARY> installed as a DLL, so we have to solve dependency hell
-    # ourselves by pulling and compiling a static version of <LIBRARY>
-    set(BUILD_USE_FETCHCONTENT ON CACHE BOOL "Use source distributions of certain dependencies")
-else()
-    # On almost all non-Windows systems it's pretty safe to assume the
-    # target system will have the package installed mainly because it should
-    # be all figure out by the package manager; see below for the CPack configuration
-    set(BUILD_USE_FETCHCONTENT OFF CACHE BOOL "Use source distributions of certain dependencies")
-endif()
-
 # Ensure we're statically linking to all the dependencies that we
-# pull and build by ourselves (see BUILD_USE_FETCHCONTENT); I cannot
-# guarantee that the packaging scripts will work out of the box
+# pull and build by ourselves; I cannot guarantee that the packaging
+# scripts for non-Windows systems will simply work out of the box
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build shared libraries" FORCE)
 
 # Ensure we're also statically linking with MSVC runtime libraries; this way
@@ -57,15 +60,11 @@ if(BUILD_CLIENT)
     add_subdirectory(external/glad)
     add_subdirectory(external/imgui)
 
-    if(NOT BUILD_USE_FETCHCONTENT)
-        find_package(glfw3 QUIET)
-    endif()
-
-    if(NOT glfw3_FOUND OR BUILD_USE_FETCHCONTENT)
-        FetchContent_Declare(glfw3 GIT_REPOSITORY https://github.com/glfw/glfw.git GIT_TAG 3.4 GIT_SHALLOW TRUE GIT_PROGRESS TRUE)
-        FetchContent_MakeAvailable(glfw3)
-    endif()
+    FetchContent_Declare(glfw3 GIT_REPOSITORY https://github.com/glfw/glfw.git GIT_TAG 3.4 GIT_SHALLOW TRUE GIT_PROGRESS TRUE)
+    FetchContent_MakeAvailable(glfw3)
 endif()
+
+add_subdirectory(assets)
 
 add_subdirectory(external/emhash)
 add_subdirectory(external/enet)
@@ -82,15 +81,8 @@ add_subdirectory(source/config)
 add_subdirectory(source/common)
 add_subdirectory(source/mathlib)
 
-if(BUILD_CLIENT)
-    add_subdirectory(source/game/client)
-endif()
-
-if(BUILD_SERVER)
-    add_subdirectory(source/game/server)
-endif()
-
+add_subdirectory(source/game/client)
+add_subdirectory(source/game/server)
 add_subdirectory(source/game/shared)
 
-include(package/package.cmake)
 include(CPack)

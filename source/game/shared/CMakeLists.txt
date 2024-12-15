@@ -7,7 +7,6 @@ add_library(shared STATIC
     "${CMAKE_CURRENT_LIST_DIR}/entity/velocity.cc"
     "${CMAKE_CURRENT_LIST_DIR}/entity/velocity.hh"
     "${CMAKE_CURRENT_LIST_DIR}/event/chunk_create.hh"
-    "${CMAKE_CURRENT_LIST_DIR}/event/chunk_remove.hh"
     "${CMAKE_CURRENT_LIST_DIR}/event/chunk_update.hh"
     "${CMAKE_CURRENT_LIST_DIR}/event/voxel_set.hh"
     "${CMAKE_CURRENT_LIST_DIR}/world/chunk.cc"
