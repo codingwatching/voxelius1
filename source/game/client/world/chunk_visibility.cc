@@ -106,7 +106,8 @@ void chunk_visibility::update_chunks(void)
 
 void chunk_visibility::cleanup(void)
 {
-    requests.clear();
+    cached_cpos = view::position.chunk + 1;
+    cached_dist = view::max_distance + 1;
     requests.clear();
 }
 

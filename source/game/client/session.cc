@@ -217,6 +217,8 @@ void session::mp::connect(const std::string &host, std::uint16_t port)
         globals::session_send_time = UINT64_MAX;
         globals::session_username = std::string();
 
+        globals::is_singleplayer = true;
+
         if(globals::registry.valid(globals::player))
             globals::player = entt::null;
         globals::registry.clear();
