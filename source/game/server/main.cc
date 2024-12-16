@@ -15,9 +15,9 @@
 #include "server/globals.hh"
 
 
-static void on_sigint(int)
+static void on_termination_signal(int)
 {
-    spdlog::warn("server: received SIGINT");
+    spdlog::warn("server: received termination signal");
     globals::is_running = false;
 }
 
@@ -37,7 +37,8 @@ int main(int argc, char **argv)
 
     globals::is_running = true;
 
-    std::signal(SIGINT, &on_sigint);
+    std::signal(SIGINT, &on_termination_signal);
+    std::signal(SIGTERM, &on_termination_signal);
 
     server_game::init();
 
