@@ -131,7 +131,7 @@ int main(int argc, char **argv)
 
 #if defined(_WIN32)
 #if defined(NDEBUG)
-    if(GetConsoleWindow() && !cmdline::contains("preserve-winconsole")) {
+    if(GetConsoleWindow() && !cmdline::contains("preserve-winconsole") && !cmdline::contains("dev")) {
         // Hide the console window on release builds
         // unless explicitly specified to preserve it instead
         FreeConsole();

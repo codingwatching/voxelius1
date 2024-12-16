@@ -26,14 +26,6 @@ static std::filesystem::path get_gamepath(void)
         }
     }
 
-#if defined(__linux__)
-    // This is a generic location for the content that would
-    // always exist on a spherical Linux system in a vacuum.
-    // For more precise locations we should really take
-    // distribution-specific directory structure into account.
-    return std::filesystem::path("/usr/share/voxelius");
-#endif
-
     return std::filesystem::current_path();
 }
 
