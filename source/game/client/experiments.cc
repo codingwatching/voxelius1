@@ -11,14 +11,12 @@
 #include "client/event/glfw_scroll.hh"
 
 #include "client/gui/chat.hh"
+#include "client/gui/hotbar.hh"
 
 #include "client/world/player_target.hh"
 
 #include "client/globals.hh"
 
-
-static std::size_t place_index = 0;
-static std::vector<Voxel> place_voxels = {};
 
 static void on_glfw_mouse_button(const GlfwMouseButtonEvent &event)
 {
@@ -30,23 +28,10 @@ static void on_glfw_mouse_button(const GlfwMouseButtonEvent &event)
             }
 
             if(event.button == GLFW_MOUSE_BUTTON_RIGHT) {
-                world::set_voxel(place_voxels[place_index], player_target::vvec + player_target::vnormal);
+                if(hotbar::slots[hotbar::active_slot] != NULL_VOXEL)
+                    world::set_voxel(hotbar::slots[hotbar::active_slot], player_target::vvec + player_target::vnormal);
                 return;
             }
-        }
-    }
-}
-
-static void on_glfw_scroll(const GlfwScrollEvent &event)
-{
-    if(!globals::gui_screen && globals::registry.valid(globals::player)) {
-        if(const auto delta = cxpr::sign<int>(event.dy)) {
-            if((delta > 0) && (place_index > 0))
-                place_index -= 1;
-            if((delta < 0) && (place_index < (place_voxels.size() - 1)))
-                place_index += 1;
-            const auto info = vdef::find(place_voxels[place_index]);
-            client_chat::print(fmt::format("[debug] {}/{}", info ? info->name : std::string("nullptr"), info ? info->state : std::string("nullptr")));
         }
     }
 }
@@ -54,20 +39,19 @@ static void on_glfw_scroll(const GlfwScrollEvent &event)
 void experiments::init(void)
 {
     globals::dispatcher.sink<GlfwMouseButtonEvent>().connect<&on_glfw_mouse_button>();
-    globals::dispatcher.sink<GlfwScrollEvent>().connect<&on_glfw_scroll>();
 }
 
 void experiments::init_late(void)
 {
-    place_voxels.push_back(game_voxels::cobble);
-    place_voxels.push_back(game_voxels::dirt);
-    place_voxels.push_back(game_voxels::grass);
-    place_voxels.push_back(game_voxels::stone);
-    place_voxels.push_back(game_voxels::vtest);
-    place_voxels.push_back(game_voxels::oak_leaves);
-    place_voxels.push_back(game_voxels::oak_planks);
-    place_voxels.push_back(game_voxels::oak_wood);
-    place_voxels.push_back(game_voxels::glass);
+    hotbar::slots[0] = game_voxels::cobble;
+    hotbar::slots[1] = game_voxels::dirt;
+    hotbar::slots[2] = game_voxels::grass;
+    hotbar::slots[3] = game_voxels::stone;
+    hotbar::slots[4] = game_voxels::vtest;
+    hotbar::slots[5] = game_voxels::oak_leaves;
+    hotbar::slots[6] = game_voxels::oak_planks;
+    hotbar::slots[7] = game_voxels::oak_wood;
+    hotbar::slots[8] = game_voxels::glass;
 }
 
 void experiments::deinit(void)

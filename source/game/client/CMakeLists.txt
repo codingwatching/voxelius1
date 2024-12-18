@@ -17,6 +17,8 @@ if(BUILD_CLIENT)
         "${CMAKE_CURRENT_LIST_DIR}/gui/crosshair.cc"
         "${CMAKE_CURRENT_LIST_DIR}/gui/crosshair.hh"
         "${CMAKE_CURRENT_LIST_DIR}/gui/gui_screen.hh"
+        "${CMAKE_CURRENT_LIST_DIR}/gui/hotbar.cc"
+        "${CMAKE_CURRENT_LIST_DIR}/gui/hotbar.hh"
         "${CMAKE_CURRENT_LIST_DIR}/gui/language.cc"
         "${CMAKE_CURRENT_LIST_DIR}/gui/language.hh"
         "${CMAKE_CURRENT_LIST_DIR}/gui/main_menu.cc"

@@ -27,6 +27,7 @@
 #include "client/gui/chat.hh"
 #include "client/gui/crosshair.hh"
 #include "client/gui/gui_screen.hh"
+#include "client/gui/hotbar.hh"
 #include "client/gui/language.hh"
 #include "client/gui/main_menu.hh"
 #include "client/gui/message_box.hh"
@@ -313,6 +314,8 @@ void client_game::init(void)
     experiments::init();
 #endif /* ENABLE_EXPERIMENTS */
 
+    hotbar::init();
+
     globals::gui_keybind_ptr = nullptr;
     globals::gui_scale = 0U;
     globals::gui_screen = GUI_MAIN_MENU;
@@ -546,6 +549,10 @@ void client_game::layout(void)
     if(globals::registry.valid(globals::player)) {
         client_chat::layout();
         player_list::layout();
+
+        if(!globals::gui_screen) {
+            hotbar::layout();
+        }
     }
 
     if(globals::gui_screen) {
