@@ -220,6 +220,12 @@ void worldgen::overworld::setup_late(std::uint64_t seed)
     fnl_caves_b.seed = static_cast<int>(twister());
     fnl_caves_b.noise_type = FNL_NOISE_PERLIN;
     fnl_caves_b.frequency = 0.0075f;
+
+    // This ensures the metadata is cleaned
+    // between different world loads that happen
+    // on singleplayer; this should fix retained
+    // entropy bug we've just found out this morning
+    metadata_map.clear();
 }
 
 bool worldgen::overworld::generate(const ChunkCoord &cpos, VoxelStorage &voxels)
