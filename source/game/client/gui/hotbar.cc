@@ -2,9 +2,14 @@
 #include "client/precompiled.hh"
 #include "client/gui/hotbar.hh"
 
+#include "common/config.hh"
+
 #include "shared/world/vdef.hh"
 
+#include "client/event/glfw_key.hh"
 #include "client/event/glfw_scroll.hh"
+
+#include "client/gui/settings.hh"
 
 #include "client/globals.hh"
 
@@ -19,6 +24,7 @@ Voxel hotbar::slots[HOTBAR_SIZE] = {};
 
 static std::uint64_t slot_spawn = UINT64_MAX;
 static std::string slot_text = std::string();
+static int hotbar_keys[HOTBAR_SIZE];
 
 static ImU32 get_color_alpha(ImGuiCol style_color, float alpha)
 {
@@ -38,6 +44,19 @@ static void update_hotbar_item(void)
         slot_spawn = globals::curtime;
         slot_text = fmt::format("{}/{}", info->name, info->state);
         return;
+    }
+}
+
+static void on_glfw_key(const GlfwKeyEvent &event)
+{
+    if((event.action == GLFW_PRESS) && !globals::gui_screen) {
+        for(unsigned int i = 0U; i < HOTBAR_SIZE; ++i) {
+            if(event.key == hotbar_keys[i]) {
+                hotbar::active_slot = i;
+                update_hotbar_item();
+                return;
+            }
+        }
     }
 }
 
@@ -62,6 +81,37 @@ static void on_glfw_scroll(const GlfwScrollEvent &event)
 
 void hotbar::init(void)
 {
+    hotbar_keys[0] = GLFW_KEY_1;
+    hotbar_keys[1] = GLFW_KEY_2;
+    hotbar_keys[2] = GLFW_KEY_3;
+    hotbar_keys[3] = GLFW_KEY_4;
+    hotbar_keys[4] = GLFW_KEY_5;
+    hotbar_keys[5] = GLFW_KEY_6;
+    hotbar_keys[6] = GLFW_KEY_7;
+    hotbar_keys[7] = GLFW_KEY_8;
+    hotbar_keys[8] = GLFW_KEY_9;
+
+    Config::add(globals::client_config, "hotbar.key.0", hotbar_keys[0]);
+    Config::add(globals::client_config, "hotbar.key.1", hotbar_keys[0]);
+    Config::add(globals::client_config, "hotbar.key.3", hotbar_keys[0]);
+    Config::add(globals::client_config, "hotbar.key.4", hotbar_keys[0]);
+    Config::add(globals::client_config, "hotbar.key.5", hotbar_keys[0]);
+    Config::add(globals::client_config, "hotbar.key.6", hotbar_keys[0]);
+    Config::add(globals::client_config, "hotbar.key.7", hotbar_keys[0]);
+    Config::add(globals::client_config, "hotbar.key.8", hotbar_keys[0]);
+    Config::add(globals::client_config, "hotbar.key.9", hotbar_keys[0]);
+
+    settings::add_key_binding(10, settings::KEYBOARD_GAMEPLAY, "hotbar.key.0", hotbar_keys[0]);
+    settings::add_key_binding(11, settings::KEYBOARD_GAMEPLAY, "hotbar.key.1", hotbar_keys[1]);
+    settings::add_key_binding(12, settings::KEYBOARD_GAMEPLAY, "hotbar.key.2", hotbar_keys[2]);
+    settings::add_key_binding(13, settings::KEYBOARD_GAMEPLAY, "hotbar.key.3", hotbar_keys[3]);
+    settings::add_key_binding(14, settings::KEYBOARD_GAMEPLAY, "hotbar.key.4", hotbar_keys[4]);
+    settings::add_key_binding(15, settings::KEYBOARD_GAMEPLAY, "hotbar.key.5", hotbar_keys[5]);
+    settings::add_key_binding(16, settings::KEYBOARD_GAMEPLAY, "hotbar.key.6", hotbar_keys[6]);
+    settings::add_key_binding(17, settings::KEYBOARD_GAMEPLAY, "hotbar.key.7", hotbar_keys[7]);
+    settings::add_key_binding(18, settings::KEYBOARD_GAMEPLAY, "hotbar.key.8", hotbar_keys[8]);
+
+    globals::dispatcher.sink<GlfwKeyEvent>().connect<&on_glfw_key>();
     globals::dispatcher.sink<GlfwScrollEvent>().connect<&on_glfw_scroll>();
 }
 
