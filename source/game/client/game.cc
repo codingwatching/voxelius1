@@ -27,7 +27,6 @@
 #include "client/gui/chat.hh"
 #include "client/gui/crosshair.hh"
 #include "client/gui/gui_screen.hh"
-#include "client/gui/hotbar.hh"
 #include "client/gui/language.hh"
 #include "client/gui/main_menu.hh"
 #include "client/gui/message_box.hh"
@@ -37,6 +36,8 @@
 #include "client/gui/progress.hh"
 #include "client/gui/settings.hh"
 #include "client/gui/splash.hh"
+
+#include "client/hud/hotbar.hh"
 
 #include "client/world/chunk_mesher.hh"
 #include "client/world/chunk_renderer.hh"
@@ -375,6 +376,8 @@ void client_game::init_late(void)
 void client_game::deinit(void)
 {
     session::deinit();
+
+    hotbar::deinit();
 
 #if ENABLE_EXPERIMENTS
     experiments::deinit();

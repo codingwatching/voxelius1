@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: BSD-2-Clause
 #include "common/precompiled.hh"
 #include "common/config.hh"
+
 #include "common/fstools.hh"
 #include "common/strtools.hh"
+
 
 void Config::add(Config &config, const std::string &name, int &vref)
 {

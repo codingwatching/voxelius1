@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: BSD-2-Clause
 #include "client/precompiled.hh"
-#include "client/gui/hotbar.hh"
+#include "client/hud/hotbar.hh"
 
 #include "common/config.hh"
+#include "common/image.hh"
 
 #include "shared/world/vdef.hh"
 
@@ -25,6 +26,41 @@ Voxel hotbar::slots[HOTBAR_SIZE] = {};
 static std::uint64_t slot_spawn = UINT64_MAX;
 static std::string slot_text = std::string();
 static int hotbar_keys[HOTBAR_SIZE];
+
+static ImTextureID hotbar_texture = nullptr;
+static ImTextureID hotbar_selection = nullptr;
+
+static ImTextureID load_texture(const std::string &path)
+{
+    Image image;
+    GLuint texture;
+
+    if(!Image::load_rgba(image, path, false)) {
+        // Just return nullptr and hope
+        // that ImGui figures this out itself
+        return nullptr;
+    }
+
+    glGenTextures(1, &texture);
+    glBindTexture(GL_TEXTURE_2D, texture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, image.width, image.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image.pixels);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+
+    Image::unload(image);
+
+    return reinterpret_cast<ImTextureID>(static_cast<std::uintptr_t>(texture));
+}
+
+static void unload_texture(ImTextureID texture_id)
+{
+    if(texture_id) {
+        auto texture = static_cast<GLuint>(reinterpret_cast<std::uintptr_t>(texture_id));
+        glDeleteTextures(1, &texture);
+    }
+}
 
 static ImU32 get_color_alpha(ImGuiCol style_color, float alpha)
 {
@@ -111,8 +147,17 @@ void hotbar::init(void)
     settings::add_key_binding(17, settings::KEYBOARD_GAMEPLAY, "hotbar.key.7", hotbar_keys[7]);
     settings::add_key_binding(18, settings::KEYBOARD_GAMEPLAY, "hotbar.key.8", hotbar_keys[8]);
 
+    hotbar_texture = load_texture("textures/hud/hotbar.png");
+    hotbar_selection = load_texture("textures/hud/hotbar_selection.png");
+
     globals::dispatcher.sink<GlfwKeyEvent>().connect<&on_glfw_key>();
     globals::dispatcher.sink<GlfwScrollEvent>().connect<&on_glfw_scroll>();
+}
+
+void hotbar::deinit(void)
+{
+    unload_texture(hotbar_selection);
+    unload_texture(hotbar_texture);
 }
 
 void hotbar::layout(void)
@@ -120,16 +165,14 @@ void hotbar::layout(void)
     ImGui::PushFont(globals::font_chat);
 
     ImGuiStyle &style = ImGui::GetStyle();
-    const float spacing = style.ItemSpacing.y;
 
     const float item_size = ITEM_SIZE * globals::gui_scale;
-    const float hotbar_height = item_size + 2.0f * spacing;
-    const float hotbar_width = HOTBAR_SIZE * (item_size + spacing) + spacing;
+    const float hotbar_width = HOTBAR_SIZE * item_size;
     const float hotbar_padding = HOTBAR_PADDING * globals::gui_scale;
 
     const ImGuiViewport* viewport = ImGui::GetMainViewport();
-    const ImVec2 window_start = ImVec2(0.5f * viewport->Size.x - 0.5f * hotbar_width, viewport->Size.y - hotbar_height - hotbar_padding);
-    const ImVec2 window_size = ImVec2(hotbar_width, hotbar_height);
+    const ImVec2 window_start = ImVec2(0.5f * viewport->Size.x - 0.5f * hotbar_width, viewport->Size.y - item_size - hotbar_padding);
+    const ImVec2 window_size = ImVec2(hotbar_width, item_size);
 
     ImGui::SetNextWindowPos(window_start);
     ImGui::SetNextWindowSize(window_size);
@@ -140,26 +183,18 @@ void hotbar::layout(void)
         return;
     }
 
-    ImDrawList *draw_list = ImGui::GetWindowDrawList();
+    ImDrawList *draw_list = ImGui::GetForegroundDrawList();
 
     ImVec2 bg_end = ImVec2(window_start.x + window_size.x, window_start.y + window_size.y);
-    draw_list->AddRectFilled(window_start, bg_end, get_color_alpha(ImGuiCol_TabActive, 1.0f));
+    draw_list->AddImage(hotbar_texture, window_start, bg_end);
 
-    ImVec2 slot_start = ImVec2(window_start.x + spacing, window_start.y + spacing);
-    ImVec2 slot_end = ImVec2(slot_start.x + item_size, slot_start.y + item_size);
-    ImU32 slot_color = get_color_alpha(ImGuiCol_FrameBg, 1.0f);
-    ImU32 sel_color = get_color_alpha(ImGuiCol_Text, 1.0f);
-
-    for(unsigned int i = 0U; i < HOTBAR_SIZE; ++i) {
-        draw_list->AddRectFilled(slot_start, slot_end, slot_color);
-        if(hotbar::active_slot == i)
-            draw_list->AddRect(slot_start, slot_end, sel_color, 0.0f, 0, 2.0f * globals::gui_scale);
-        slot_start.x += item_size + spacing;
-        slot_end.x += item_size + spacing;
-    }
+    const float sel_a = 1.0f * globals::gui_scale;
+    ImVec2 sel_start = ImVec2(window_start.x + hotbar::active_slot * item_size - sel_a, window_start.y - sel_a);
+    ImVec2 sel_end = ImVec2(sel_start.x + item_size + 2.0f * sel_a, sel_start.y + item_size + 2.0f * sel_a);
+    draw_list->AddImage(hotbar_selection, sel_start, sel_end);
 
     const ImVec2 text_size = ImGui::CalcTextSize(slot_text.c_str(), slot_text.c_str() + slot_text.size());
-    const ImVec2 text_pos = ImVec2(0.5f * viewport->Size.x - 0.5f * text_size.x, viewport->Size.y - hotbar_height - 2.0f * text_size.y);
+    const ImVec2 text_pos = ImVec2(0.5f * viewport->Size.x - 0.5f * text_size.x, viewport->Size.y - item_size - 2.0f * text_size.y);
     const ImVec2 shad_pos = ImVec2(text_pos.x + 0.6f * globals::gui_scale, text_pos.y + 0.6f * globals::gui_scale);
 
     const float fadeout_seconds = 3.0f;
@@ -168,10 +203,8 @@ void hotbar::layout(void)
     const ImU32 shad_col = get_color_alpha(ImGuiCol_WindowBg, fadeout);
 
     const ImFont *font = ImGui::GetFont();
-    
-    ImDrawList *fg_draw = ImGui::GetForegroundDrawList();
-    fg_draw->AddText(font, font->FontSize, shad_pos, shad_col, slot_text.c_str(), slot_text.c_str() + slot_text.size());
-    fg_draw->AddText(font, font->FontSize, text_pos, text_col, slot_text.c_str(), slot_text.c_str() + slot_text.size());
+    draw_list->AddText(font, font->FontSize, shad_pos, shad_col, slot_text.c_str(), slot_text.c_str() + slot_text.size());
+    draw_list->AddText(font, font->FontSize, text_pos, text_col, slot_text.c_str(), slot_text.c_str() + slot_text.size());
 
     ImGui::End();
     ImGui::PopFont();

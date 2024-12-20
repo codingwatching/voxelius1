@@ -16,5 +16,6 @@ extern Voxel slots[HOTBAR_SIZE];
 namespace hotbar
 {
 void init(void);
+void deinit(void);
 void layout(void);
 } // namespace hotbar
