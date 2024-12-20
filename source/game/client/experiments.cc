@@ -11,7 +11,8 @@
 #include "client/event/glfw_scroll.hh"
 
 #include "client/gui/chat.hh"
-#include "client/gui/hotbar.hh"
+
+#include "client/hud/hotbar.hh"
 
 #include "client/world/player_target.hh"
 
