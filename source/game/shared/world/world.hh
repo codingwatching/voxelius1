@@ -17,8 +17,8 @@ Chunk *find(entt::entity entity);
 
 namespace world
 {
-Voxel get_voxel(const VoxelCoord &vpos);
-Voxel get_voxel(const ChunkCoord &cpos, const LocalCoord &lpos);
-bool set_voxel(Voxel voxel, const VoxelCoord &vpos);
-bool set_voxel(Voxel voxel, const ChunkCoord &cpos, const LocalCoord &lpos);
+VoxelID get_voxel(const VoxelCoord &vpos);
+VoxelID get_voxel(const ChunkCoord &cpos, const LocalCoord &lpos);
+bool set_voxel(VoxelID voxel, const VoxelCoord &vpos);
+bool set_voxel(VoxelID voxel, const ChunkCoord &cpos, const LocalCoord &lpos);
 } // namespace world

@@ -83,14 +83,14 @@ Chunk *world::find(entt::entity entity)
     return nullptr;
 }
 
-Voxel world::get_voxel(const VoxelCoord &vpos)
+VoxelID world::get_voxel(const VoxelCoord &vpos)
 {
     const auto cpos = VoxelCoord::to_chunk(vpos);
     const auto lpos = VoxelCoord::to_local(vpos);
     return world::get_voxel(cpos, lpos);
 }
 
-Voxel world::get_voxel(const ChunkCoord &cpos, const LocalCoord &lpos)
+VoxelID world::get_voxel(const ChunkCoord &cpos, const LocalCoord &lpos)
 {
     const auto rvpos = ChunkCoord::to_voxel(cpos, lpos);
     const auto rcpos = VoxelCoord::to_chunk(rvpos);
@@ -103,14 +103,14 @@ Voxel world::get_voxel(const ChunkCoord &cpos, const LocalCoord &lpos)
     return NULL_VOXEL;
 }
 
-bool world::set_voxel(Voxel voxel, const VoxelCoord &vpos)
+bool world::set_voxel(VoxelID voxel, const VoxelCoord &vpos)
 {
     const auto cpos = VoxelCoord::to_chunk(vpos);
     const auto lpos = VoxelCoord::to_local(vpos);
     return world::set_voxel(voxel, cpos, lpos);
 }
 
-bool world::set_voxel(Voxel voxel, const ChunkCoord &cpos, const LocalCoord &lpos)
+bool world::set_voxel(VoxelID voxel, const ChunkCoord &cpos, const LocalCoord &lpos)
 {
     const auto rvpos = ChunkCoord::to_voxel(cpos, lpos);
     const auto rcpos = VoxelCoord::to_chunk(rvpos);

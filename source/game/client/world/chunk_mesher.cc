@@ -66,7 +66,7 @@ static const CachedChunkCoord get_cached_cpos(const ChunkCoord &pivot, const Chu
     return CPOS_ITSELF;
 }
 
-static bool vis_test(WorkerContext *ctx, Voxel voxel, const VoxelInfo *info, const LocalCoord &lpos)
+static bool vis_test(WorkerContext *ctx, VoxelID voxel, const VoxelInfo *info, const LocalCoord &lpos)
 {
     const auto pvpos = ChunkCoord::to_voxel(ctx->coord, lpos);
     const auto pcpos = VoxelCoord::to_chunk(pvpos);
@@ -136,7 +136,7 @@ static void push_quad_v(WorkerContext *ctx, const VoxelInfo *info, const Vec3f &
     else ctx->quads_nb[vtex.cached_plane].push_back(make_chunk_quad(pos, size, facing, vtex.cached_offset + entropy_mod, 0));
 }
 
-static void make_cube(WorkerContext *ctx, Voxel voxel, const VoxelInfo *info, const LocalCoord &lpos, VoxelVis vis, std::size_t entropy)
+static void make_cube(WorkerContext *ctx, VoxelID voxel, const VoxelInfo *info, const LocalCoord &lpos, VoxelVis vis, std::size_t entropy)
 {
     const Vec3f fpos = LocalCoord::to_vec3f(lpos);
     const Vec2f fsize = Vec2f(1.0f, 1.0f);

@@ -7,7 +7,7 @@
 
 
 std::unordered_map<std::string, VDefBuilder> vdef::builders = {};
-std::unordered_map<std::string, Voxel> vdef::names = {};
+std::unordered_map<std::string, VoxelID> vdef::names = {};
 std::vector<VoxelInfo> vdef::voxels = {};
 
 static VoxelFace parse_face_name(const std::string &face_str)
@@ -71,7 +71,7 @@ VDefBuilder &VDefBuilder::add_default_state(void)
     return add_state("default");
 }
 
-Voxel VDefBuilder::build(void) const
+VoxelID VDefBuilder::build(void) const
 {
     const auto it = vdef::names.find(name);
 
@@ -111,7 +111,7 @@ Voxel VDefBuilder::build(void) const
 
     std::size_t face_count = {};
     std::vector<VoxelInfo> infos = {};
-    Voxel base = vdef::voxels.size() + 1;
+    VoxelID base = vdef::voxels.size() + 1;
 
     switch(type) {
         case VoxelType::Cube:
@@ -239,7 +239,7 @@ VoxelInfo *vdef::find(const std::string &name)
     return nullptr;
 }
 
-VoxelInfo *vdef::find(const Voxel voxel)
+VoxelInfo *vdef::find(const VoxelID voxel)
 {
     if((voxel != NULL_VOXEL) && (voxel <= vdef::voxels.size()))
         return &vdef::voxels[voxel - 1];

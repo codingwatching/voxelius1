@@ -12,7 +12,7 @@
 
 constexpr static float MAX_REACH = 16.0f;
 
-Voxel player_target::voxel = NULL_VOXEL;
+VoxelID player_target::voxel = NULL_VOXEL;
 VoxelCoord player_target::vvec = VoxelCoord();
 VoxelCoord player_target::vnormal = VoxelCoord();
 const VoxelInfo *player_target::info = nullptr;

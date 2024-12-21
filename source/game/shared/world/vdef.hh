@@ -1,5 +1,5 @@
 #pragma once
-#include "shared/world/voxel.hh"
+#include "shared/world/voxel_id.hh"
 
 enum class VoxelFace : unsigned int {
     Invalid     = 0xFFFF,
@@ -73,7 +73,7 @@ struct VoxelInfo final {
     VoxelType type {};
     bool animated {};
     bool blending {};
-    Voxel base {};
+    VoxelID base {};
 };
 
 class VDefBuilder final {
@@ -89,7 +89,7 @@ public:
     VDefBuilder &add_stairs_states(void);
 
 public:
-    Voxel build(void) const;
+    VoxelID build(void) const;
 
 private:
     std::vector<std::string> states {};
@@ -100,7 +100,7 @@ private:
 namespace vdef
 {
 extern std::unordered_map<std::string, VDefBuilder> builders;
-extern std::unordered_map<std::string, Voxel> names;
+extern std::unordered_map<std::string, VoxelID> names;
 extern std::vector<VoxelInfo> voxels;
 } // namespace vdef
 
@@ -108,7 +108,7 @@ namespace vdef
 {
 VDefBuilder &create(const std::string &name, VoxelType type);
 VoxelInfo *find(const std::string &name);
-VoxelInfo *find(const Voxel voxel);
+VoxelInfo *find(const VoxelID voxel);
 } // namespace vdef
 
 namespace vdef

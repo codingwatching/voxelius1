@@ -85,7 +85,7 @@ void send_spawn_player(ENetPeer *peer, ENetHost *host, entt::entity entity);
 
 namespace protocol
 {
-void send_set_voxel(ENetPeer *peer, ENetHost *host, const VoxelCoord &vpos, Voxel voxel);
+void send_set_voxel(ENetPeer *peer, ENetHost *host, const VoxelCoord &vpos, VoxelID voxel);
 } // namespace protocol
 
 struct protocol::StatusRequest final : public protocol::Base<0x0000> {
@@ -155,7 +155,7 @@ struct protocol::ChatMessage final : public protocol::Base<0x000A> {
 
 struct protocol::SetVoxel final : public protocol::Base<0x000B> {
     VoxelCoord coord {};
-    Voxel voxel {};
+    VoxelID voxel {};
     std::uint16_t flags {};
 };
 

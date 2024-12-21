@@ -51,7 +51,7 @@ void RayDDA::setup(RayDDA &ray, const WorldCoord &start, const Vec3f &direction)
     }
 }
 
-Voxel RayDDA::step(RayDDA &ray)
+VoxelID RayDDA::step(RayDDA &ray)
 {
     if(ray.side_dist[0] < ray.side_dist[2]) {
         if(ray.side_dist[0] < ray.side_dist[1]) {

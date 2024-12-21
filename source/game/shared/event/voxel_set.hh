@@ -10,5 +10,5 @@ struct VoxelSetEvent final {
     LocalCoord lpos {};
     VoxelCoord vpos {};
     Chunk *chunk {};
-    Voxel voxel {};    
+    VoxelID voxel {};    
 };

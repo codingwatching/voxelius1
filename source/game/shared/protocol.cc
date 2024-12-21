@@ -462,7 +462,7 @@ void protocol::send_spawn_player(ENetPeer *peer, ENetHost *host, entt::entity en
     protocol::send(peer, host, packet);
 }
 
-void protocol::send_set_voxel(ENetPeer *peer, ENetHost *host, const VoxelCoord &vpos, Voxel voxel)
+void protocol::send_set_voxel(ENetPeer *peer, ENetHost *host, const VoxelCoord &vpos, VoxelID voxel)
 {
     protocol::SetVoxel packet = {};
     packet.coord = vpos;

@@ -22,7 +22,7 @@ constexpr static float HOTBAR_PADDING = 2.0f;
 constexpr static ImGuiWindowFlags WINDOW_FLAGS = ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoDecoration;
 
 unsigned int hotbar::active_slot = 0U;
-Voxel hotbar::slots[HOTBAR_SIZE] = {};
+VoxelID hotbar::slots[HOTBAR_SIZE] = {};
 
 static std::uint64_t slot_spawn = UINT64_MAX;
 static std::string slot_text = std::string();

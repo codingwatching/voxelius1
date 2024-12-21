@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: BSD-2-Clause
 #pragma once
 #include "shared/world/voxel_coord.hh"
+#include "shared/world/voxel_id.hh"
 #include "shared/world/world_coord.hh"
-#include "shared/world/voxel.hh"
 
 class RayDDA final {
 public:
@@ -21,5 +21,5 @@ public:
 
 public:
     static void setup(RayDDA &ray, const WorldCoord &start, const Vec3f &direction);
-    static Voxel step(RayDDA &ray);
+    static VoxelID step(RayDDA &ray);
 };

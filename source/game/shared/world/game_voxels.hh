@@ -1,19 +1,19 @@
 // SPDX-License-Identifier: BSD-2-Clause
 #pragma once
-#include "shared/world/voxel.hh"
+#include "shared/world/voxel_id.hh"
 
 namespace game_voxels
 {
-extern Voxel cobble;
-extern Voxel dirt;
-extern Voxel grass;
-extern Voxel stone;
-extern Voxel vtest;
-extern Voxel vtest_ck;
-extern Voxel oak_leaves;
-extern Voxel oak_planks;
-extern Voxel oak_wood;
-extern Voxel glass;
+extern VoxelID cobble;
+extern VoxelID dirt;
+extern VoxelID grass;
+extern VoxelID stone;
+extern VoxelID vtest;
+extern VoxelID vtest_ck;
+extern VoxelID oak_leaves;
+extern VoxelID oak_planks;
+extern VoxelID oak_wood;
+extern VoxelID glass;
 } // namespace game_voxels
 
 namespace game_voxels

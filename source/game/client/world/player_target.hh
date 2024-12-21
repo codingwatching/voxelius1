@@ -5,7 +5,7 @@
 
 namespace player_target
 {
-extern Voxel voxel;
+extern VoxelID voxel;
 extern VoxelCoord vvec;
 extern VoxelCoord vnormal;
 extern const VoxelInfo *info;
