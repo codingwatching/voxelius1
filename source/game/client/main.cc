@@ -122,7 +122,7 @@ static void on_glfw_window_focus(GLFWwindow *window, int focused)
     ImGui_ImplGlfw_WindowFocusCallback(window, focused);
 }
 
-static void on_opengl_message(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar *message, const void *param)
+static void GLAD_API_PTR on_opengl_message(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar *message, const void *param)
 {
     spdlog::info("opengl: {}", reinterpret_cast<const char *>(message));
 }

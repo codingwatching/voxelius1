@@ -14,7 +14,6 @@ set(CPACK_PACKAGE_VERSION_TWEAK ${PROJECT_VERSION_TWEAK})
 
 set(CPACK_PACKAGE_DIRECTORY "${PROJECT_BINARY_DIR}")
 set(CPACK_PACKAGE_INSTALL_DIRECTORY "${CPACK_PACKAGE_NAME}")
-set(CPACK_RESOURCE_FILE_LICENSE "${PROJECT_SOURCE_DIR}/LICENSE")
 
 # This enables solution directories if the feature is applicable
 # to the target build environment. This allows built-in pseudo-targets
@@ -56,26 +55,9 @@ set(PHYSFS_ARCHIVE_ZIP ON CACHE BOOL "" FORCE)
 
 include(FetchContent)
 
-if(BUILD_CLIENT)
-    add_subdirectory(external/glad)
-    add_subdirectory(external/imgui)
-
-    FetchContent_Declare(glfw3 GIT_REPOSITORY https://github.com/glfw/glfw.git GIT_TAG 3.4 GIT_SHALLOW TRUE GIT_PROGRESS TRUE)
-    FetchContent_MakeAvailable(glfw3)
-endif()
-
 add_subdirectory(assets)
 
-add_subdirectory(external/emhash)
-add_subdirectory(external/enet)
-add_subdirectory(external/entt)
-add_subdirectory(external/fastnoiselite)
-add_subdirectory(external/miniz)
-add_subdirectory(external/parson)
-add_subdirectory(external/physfs)
-add_subdirectory(external/spdlog)
-add_subdirectory(external/stb)
-add_subdirectory(external/thread_pool)
+add_subdirectory(libraries)
 
 add_subdirectory(source/config)
 add_subdirectory(source/common)
@@ -84,5 +66,8 @@ add_subdirectory(source/mathlib)
 add_subdirectory(source/game/client)
 add_subdirectory(source/game/server)
 add_subdirectory(source/game/shared)
+
+install(FILES "${CMAKE_CURRENT_LIST_DIR}/LICENSE.assets.txt" DESTINATION ".")
+install(FILES "${CMAKE_CURRENT_LIST_DIR}/LICENSE.txt" DESTINATION ".")
 
 include(CPack)

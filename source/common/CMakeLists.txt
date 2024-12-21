@@ -22,7 +22,8 @@ add_library(common STATIC
     "${CMAKE_CURRENT_LIST_DIR}/strtools.hh")
 target_include_directories(common PRIVATE "${PROJECT_SOURCE_DIR}/source")
 target_precompile_headers(common PRIVATE "${CMAKE_CURRENT_LIST_DIR}/precompiled.hh")
-target_link_libraries(common PUBLIC emhash physfs spdlog stb)
+target_link_directories(common PUBLIC "${LIBRARIES_BINARY_DIR}")
+target_link_libraries(common PUBLIC physfs spdlog stb)
 target_link_libraries(common PUBLIC mathlib)
 
 if(WIN32)

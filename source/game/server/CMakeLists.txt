@@ -17,6 +17,7 @@ if(BUILD_SERVER)
     target_include_directories(vserver PRIVATE "${PROJECT_SOURCE_DIR}/source")
     target_include_directories(vserver PRIVATE "${PROJECT_SOURCE_DIR}/source/game")
     target_precompile_headers(vserver PRIVATE "${CMAKE_CURRENT_LIST_DIR}/precompiled.hh")
+    target_link_directories(vserver PUBLIC "${LIBRARIES_BINARY_DIR}")
     target_link_libraries(vserver PUBLIC shared)
 
     if(WIN32)

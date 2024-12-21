@@ -12,19 +12,7 @@
                 "LAUNCH_CLIENT", "LAUNCH_SERVER"
             ],
             "includePath": [
-                "${workspaceFolder}/build/_deps/glfw3-src/include", // BUILD_USE_FETCHCONTENT
-                "${workspaceFolder}/external/emhash/include",
-                "${workspaceFolder}/external/enet/include",
-                "${workspaceFolder}/external/entt/include",
-                "${workspaceFolder}/external/fastnoiselite/include",
-                "${workspaceFolder}/external/glad/include",
-                "${workspaceFolder}/external/imgui/include",
-                "${workspaceFolder}/external/miniz/include",
-                "${workspaceFolder}/external/parson/include",
-                "${workspaceFolder}/external/physfs/include",
-                "${workspaceFolder}/external/spdlog/include",
-                "${workspaceFolder}/external/stb/include",
-                "${workspaceFolder}/external/thread_pool/include",
+                "${workspaceFolder}/libraries/include",
                 "${workspaceFolder}/source/game",
                 "${workspaceFolder}/source",
                 "${default}"

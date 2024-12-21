@@ -1,0 +1,6 @@
+cmake_minimum_required(VERSION 3.15)
+project(FastNoiseLite LANGUAGES C VERSION 1.1.1)
+add_library(FNL STATIC "${CMAKE_CURRENT_LIST_DIR}/fastnoiselite.c")
+target_include_directories(FNL PUBLIC "${LIBRARIES_INCLUDE_DIR}")
+target_compile_definitions(FNL PRIVATE _CRT_SECURE_NO_WARNINGS)
+set_target_properties(FNL PROPERTIES FOLDER External)
