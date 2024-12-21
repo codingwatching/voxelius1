@@ -2,6 +2,7 @@
 #include "shared/precompiled.hh"
 #include "shared/setup.hh"
 
+#include "common/resource/binary_file.hh"
 #include "common/resource/image.hh"
 #include "common/resource/resource.hh"
 
@@ -140,6 +141,7 @@ void shared::setup(int argc, char **argv)
         std::terminate();
     }
 
+    resource::register_loader<BinaryFile>(std::make_shared<BinaryFileLoader>());
     resource::register_loader<Image>(std::make_shared<ImageLoader>());
 }
 

@@ -4,6 +4,8 @@
 
 #include "config/cmake.hh"
 
+#include "common/resource/binary_file.hh"
+
 #include "common/config.hh"
 #include "common/epoch.hh"
 #include "common/fstools.hh"
@@ -64,6 +66,9 @@
 #include "shared/entity/player.hh"
 #include "client/experiments.hh"
 #endif /* ENABLE_EXPERIMENTS */
+
+static const BinaryFile *bin_unscii16 = nullptr;
+static const BinaryFile *bin_unscii8 = nullptr;
 
 bool client_game::streamer_mode = false;
 bool client_game::vertical_sync = true;
@@ -132,14 +137,12 @@ static void on_glfw_framebuffer_size(const GlfwFramebufferSizeEvent &event)
         ImVector<ImWchar> ranges = {};
         builder.BuildRanges(&ranges);
 
-        if(!fstools::read_bytes("fonts/unscii-16.ttf", fontbin))
-            std::terminate();
-        ImGui::GetIO().FontDefault = io.Fonts->AddFontFromMemoryTTF(fontbin.data(), fontbin.size(), 16.0f * scale, &font_config, ranges.Data);
-        globals::font_chat = io.Fonts->AddFontFromMemoryTTF(fontbin.data(), fontbin.size(), 8.0f * scale, &font_config, ranges.Data);
+        globals::font_default = io.Fonts->AddFontFromMemoryTTF(bin_unscii16->buffer, bin_unscii16->length, 16.0f * scale, &font_config, ranges.Data);
+        globals::font_chat = io.Fonts->AddFontFromMemoryTTF(bin_unscii16->buffer, bin_unscii16->length, 8.0f * scale, &font_config, ranges.Data);
+        globals::font_debug = io.Fonts->AddFontFromMemoryTTF(bin_unscii8->buffer, bin_unscii8->length, 4.0f * scale, &font_config);
 
-        if(!fstools::read_bytes("fonts/unscii-8.ttf", fontbin))
-            std::terminate();
-        globals::font_debug = io.Fonts->AddFontFromMemoryTTF(fontbin.data(), fontbin.size(), 4.0f * scale, &font_config);
+        // Re-assign the default font
+        io.FontDefault = globals::font_default;
 
         // This should be here!!! Just calling Build()
         // on the font atlas does not invalidate internal
@@ -159,6 +162,14 @@ static void on_glfw_framebuffer_size(const GlfwFramebufferSizeEvent &event)
 
 void client_game::init(void)
 {
+    bin_unscii16 = resource::load<BinaryFile>("fonts/unscii-16.ttf", PURGE_PRECACHE);
+    bin_unscii8 = resource::load<BinaryFile>("fonts/unscii-8.ttf", PURGE_PRECACHE);
+
+    if(!bin_unscii16 || !bin_unscii8) {
+        spdlog::critical("client_game: font loading failed");
+        std::terminate();
+    }
+
     splash::init();
     splash::render(std::string());
 

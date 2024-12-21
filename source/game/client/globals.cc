@@ -34,8 +34,9 @@ GLuint globals::world_fbo = 0;
 GLuint globals::world_fbo_color = 0;
 GLuint globals::world_fbo_depth = 0;
 
-ImFont *globals::font_chat = nullptr;
 ImFont *globals::font_debug = nullptr;
+ImFont *globals::font_default = nullptr;
+ImFont *globals::font_chat = nullptr;
 
 int *globals::gui_keybind_ptr = nullptr;
 unsigned int globals::gui_scale = 0U;
