@@ -1,9 +1,0 @@
-{
-  "default": {
-    "animated": false,
-    "blending": true,
-    "textures": {
-      "default": ["textures/voxels/glass_01.png"]
-    }
-  }
-}

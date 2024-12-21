@@ -2,8 +2,6 @@
 #include "shared/world/voxel_id.hh"
 
 enum class VoxelFace : unsigned int {
-    Invalid     = 0xFFFF,
-
     CubeNorth   = 0x0000,
     CubeSouth   = 0x0001,
     CubeEast    = 0x0002,
@@ -68,7 +66,6 @@ struct VoxelTexture final {
 
 struct VoxelInfo final {
     std::vector<VoxelTexture> textures {};
-    std::string state {};
     std::string name {};
     VoxelType type {};
     bool animated {};
@@ -76,37 +73,33 @@ struct VoxelInfo final {
     VoxelID base {};
 };
 
-class VDefBuilder final {
+class VoxelInfoBuilder final {
 public:
-    VDefBuilder(void) = delete;
-    VDefBuilder(const std::string &name, VoxelType type);
-    virtual ~VDefBuilder(void) = default;
+    explicit VoxelInfoBuilder(const std::string &name, VoxelType type, bool animated, bool blending);
+    virtual ~VoxelInfoBuilder(void) = default;
 
 public:
-    VDefBuilder &add_state(const std::string &name);
-    VDefBuilder &add_default_state(void);
-    VDefBuilder &add_slab_states(void);
-    VDefBuilder &add_stairs_states(void);
+    VoxelInfoBuilder &add_texture_default(const std::string &texture);
+    VoxelInfoBuilder &add_texture(VoxelFace face, const std::string &texture);
 
 public:
     VoxelID build(void) const;
 
 private:
-    std::vector<std::string> states {};
-    std::string name {};
-    VoxelType type {};
+    VoxelTexture default_texture;
+    VoxelInfo prototype;
 };
 
 namespace vdef
 {
-extern std::unordered_map<std::string, VDefBuilder> builders;
+extern std::unordered_map<std::string, VoxelInfoBuilder> builders;
 extern std::unordered_map<std::string, VoxelID> names;
-extern std::vector<VoxelInfo> voxels;
+extern std::vector<std::shared_ptr<VoxelInfo>> voxels;
 } // namespace vdef
 
 namespace vdef
 {
-VDefBuilder &create(const std::string &name, VoxelType type);
+VoxelInfoBuilder &construct(const std::string &name, VoxelType type, bool animated, bool blending);
 VoxelInfo *find(const std::string &name);
 VoxelInfo *find(const VoxelID voxel);
 } // namespace vdef

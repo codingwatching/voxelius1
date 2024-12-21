@@ -5,7 +5,7 @@
 #include "shared/world/vdef.hh"
 
 
-VoxelID game_voxels::cobble = NULL_VOXEL;
+VoxelID game_voxels::cobblestone = NULL_VOXEL;
 VoxelID game_voxels::dirt = NULL_VOXEL;
 VoxelID game_voxels::grass = NULL_VOXEL;
 VoxelID game_voxels::stone = NULL_VOXEL;
@@ -13,25 +13,79 @@ VoxelID game_voxels::vtest = NULL_VOXEL;
 VoxelID game_voxels::vtest_ck = NULL_VOXEL;
 VoxelID game_voxels::oak_leaves = NULL_VOXEL;
 VoxelID game_voxels::oak_planks = NULL_VOXEL;
-VoxelID game_voxels::oak_wood = NULL_VOXEL;
+VoxelID game_voxels::oak_log = NULL_VOXEL;
 VoxelID game_voxels::glass = NULL_VOXEL;
 
 void game_voxels::populate(void)
 {
-    game_voxels::stone = vdef::create("stone", VoxelType::Cube).add_default_state().build();
-    game_voxels::cobble = vdef::create("cobble", VoxelType::Cube).add_default_state().build();
-    game_voxels::grass = vdef::create("grass", VoxelType::Cube).add_default_state().build();
-    game_voxels::dirt = vdef::create("dirt", VoxelType::Cube).add_default_state().build();
-    game_voxels::vtest = vdef::create("vtest", VoxelType::Cube).add_default_state().add_state("chromakey").build();
-    game_voxels::vtest_ck = game_voxels::vtest + 1;
+    // Stone; the backbone of the generated world
+    game_voxels::stone = vdef::construct("stone", VoxelType::Cube, false, false)
+        .add_texture_default("textures/voxels/stone_01.png")
+        .add_texture_default("textures/voxels/stone_02.png")
+        .add_texture_default("textures/voxels/stone_03.png")
+        .add_texture_default("textures/voxels/stone_04.png")
+        .build();
 
-    const VoxelID leaves_base = vdef::create("leaves", VoxelType::Cube).add_state("oak").build();
-    const VoxelID planks_base = vdef::create("planks", VoxelType::Cube).add_state("oak").build();
-    const VoxelID wood_base = vdef::create("wood", VoxelType::Cube).add_state("oak").build();
+    // Cobblestone; should drop when a stone is broken, might also be present in surface features
+    game_voxels::cobblestone = vdef::construct("cobblestone", VoxelType::Cube, false, false)
+        .add_texture_default("textures/voxels/cobblestone_01.png")
+        .add_texture_default("textures/voxels/cobblestone_02.png")
+        .build();
 
-    game_voxels::oak_leaves = leaves_base + 0;
-    game_voxels::oak_planks = planks_base + 0;
-    game_voxels::oak_wood = wood_base + 0;
+    // Dirt with a grass layer on top; the top layer of plains biome
+    game_voxels::grass = vdef::construct("grass", VoxelType::Cube, false, false)
+        .add_texture_default("textures/voxels/grass_side_01.png")
+        .add_texture_default("textures/voxels/grass_side_02.png")
+        .add_texture(VoxelFace::CubeBottom, "textures/voxels/dirt_01.png")
+        .add_texture(VoxelFace::CubeBottom, "textures/voxels/dirt_02.png")
+        .add_texture(VoxelFace::CubeBottom, "textures/voxels/dirt_03.png")
+        .add_texture(VoxelFace::CubeBottom, "textures/voxels/dirt_04.png")
+        .add_texture(VoxelFace::CubeTop, "textures/voxels/grass_01.png")
+        .add_texture(VoxelFace::CubeTop, "textures/voxels/grass_02.png")
+        .build();
 
-    game_voxels::glass = vdef::create("glass", VoxelType::Cube).add_default_state().build();
+    // Dirt; the under-surface layer of some biomes
+    game_voxels::dirt = vdef::construct("dirt", VoxelType::Cube, false, false)
+        .add_texture_default("textures/voxels/dirt_01.png")
+        .add_texture_default("textures/voxels/dirt_02.png")
+        .add_texture_default("textures/voxels/dirt_03.png")
+        .add_texture_default("textures/voxels/dirt_04.png")
+        .build();
+
+    // VTest; a test voxel to ensure animations work
+    game_voxels::vtest = vdef::construct("vtest", VoxelType::Cube, true, false)
+        .add_texture_default("textures/voxels/vtest_F1.png")
+        .add_texture_default("textures/voxels/vtest_F2.png")
+        .add_texture_default("textures/voxels/vtest_F3.png")
+        .add_texture_default("textures/voxels/vtest_F4.png")
+        .build();
+
+    // VTest-CK; a pure blue chromakey I used to make the game's logo
+    game_voxels::vtest_ck = vdef::construct("vtest_ck", VoxelType::Cube, false, false)
+        .add_texture_default("textures/voxels/chromakey.png")
+        .build();
+
+    // Oak leaves; greenery. TODO: add trees as surface features
+    game_voxels::oak_leaves = vdef::construct("oak_leaves", VoxelType::Cube, false, false)
+        .add_texture_default("textures/voxels/oak_leaves.png")
+        .build();
+
+    // Oak planks; the thing that comes out of oak logs
+    game_voxels::oak_planks = vdef::construct("oak_planks", VoxelType::Cube, false, false)
+        .add_texture_default("textures/voxels/oak_planks_01.png")
+        .add_texture_default("textures/voxels/oak_planks_02.png")
+        .build();
+
+    // Oak logs; greenery. TODO: add trees as surface features
+    game_voxels::oak_log = vdef::construct("oak_log", VoxelType::Cube, false, false)
+        .add_texture_default("textures/voxels/oak_wood_01.png")
+        .add_texture_default("textures/voxels/oak_wood_02.png")
+        .add_texture(VoxelFace::CubeBottom, "textures/voxels/oak_wood_top.png")
+        .add_texture(VoxelFace::CubeTop, "textures/voxels/oak_wood_top.png")
+        .build();
+
+    // Glass; blend rendering test
+    game_voxels::glass = vdef::construct("glass", VoxelType::Cube, false, true)
+        .add_texture_default("textures/voxels/glass_01.png")
+        .build();
 }

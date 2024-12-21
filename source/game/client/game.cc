@@ -355,8 +355,8 @@ void client_game::init_late(void)
     // NOTE: this is very debug, early and a quite
     // conservative limit choice; there must be a better
     // way to make this limit way smaller than it currently is
-    for(const VoxelInfo &info : vdef::voxels) {
-        for(const VoxelTexture &vtex : info.textures) {
+    for(const std::shared_ptr<VoxelInfo> &info : vdef::voxels) {
+        for(const VoxelTexture &vtex : info->textures) {
             max_texture_count += vtex.paths.size();
         }
     }
@@ -364,15 +364,15 @@ void client_game::init_late(void)
     // UNDONE: asset packs for non-16x16 stuff
     voxel_atlas::create(16, 16, max_texture_count);
 
-    for(VoxelInfo &info : vdef::voxels) {
-        for(VoxelTexture &vtex : info.textures) {
+    for(std::shared_ptr<VoxelInfo> &info : vdef::voxels) {
+        for(VoxelTexture &vtex : info->textures) {
             if(AtlasStrip *strip = voxel_atlas::find_or_load(vtex.paths)) {
                 vtex.cached_offset = strip->offset;
                 vtex.cached_plane = strip->plane;
                 continue;
             }
             
-            spdlog::critical("debug_session: {}: failed to load atlas strips", info.name);
+            spdlog::critical("debug_session: {}: failed to load atlas strips", info->name);
             std::terminate();
         }
     }

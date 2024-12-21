@@ -47,7 +47,7 @@ static void update_hotbar_item(void)
 
     if(const VoxelInfo *info = vdef::find(hotbar::slots[hotbar::active_slot])) {
         slot_spawn = globals::curtime;
-        slot_text = fmt::format("{}/{}", info->name, info->state);
+        slot_text = fmt::format("{}", info->name);
         return;
     }
 }

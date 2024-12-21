@@ -44,14 +44,14 @@ void experiments::init(void)
 
 void experiments::init_late(void)
 {
-    hotbar::slots[0] = game_voxels::cobble;
+    hotbar::slots[0] = game_voxels::cobblestone;
     hotbar::slots[1] = game_voxels::dirt;
     hotbar::slots[2] = game_voxels::grass;
     hotbar::slots[3] = game_voxels::stone;
     hotbar::slots[4] = game_voxels::vtest;
     hotbar::slots[5] = game_voxels::oak_leaves;
     hotbar::slots[6] = game_voxels::oak_planks;
-    hotbar::slots[7] = game_voxels::oak_wood;
+    hotbar::slots[7] = game_voxels::oak_log;
     hotbar::slots[8] = game_voxels::glass;
 }
 

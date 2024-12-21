@@ -175,7 +175,7 @@ static void generate_features(const ChunkCoord &cpos, VoxelStorage &voxels)
         for(std::size_t tc = 0; tc < COUNT; tc += 1) {
             if((lpos[0] == lxa[tc]) && (lpos[2] == lza[tc])) {
                 if(cxpr::range<std::int64_t>(vpos[1] - metadata.heightmap[hdx], 1, heights[tc]))
-                    voxels[index] = game_voxels::cobble;
+                    voxels[index] = game_voxels::cobblestone;
                 break;
             }
         }

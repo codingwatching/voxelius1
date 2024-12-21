@@ -4,7 +4,7 @@
 
 namespace game_voxels
 {
-extern VoxelID cobble;
+extern VoxelID cobblestone;
 extern VoxelID dirt;
 extern VoxelID grass;
 extern VoxelID stone;
@@ -12,7 +12,7 @@ extern VoxelID vtest;
 extern VoxelID vtest_ck;
 extern VoxelID oak_leaves;
 extern VoxelID oak_planks;
-extern VoxelID oak_wood;
+extern VoxelID oak_log;
 extern VoxelID glass;
 } // namespace game_voxels
 
