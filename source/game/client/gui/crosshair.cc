@@ -6,9 +6,9 @@
 #include "mathlib/mat4x4f.hh"
 #include "mathlib/vec2f.hh"
 
-#include "common/image.hh"
-
 #include "client/event/glfw_framebuffer_size.hh"
+
+#include "client/resource/texture2D.hh"
 
 #include "client/globals.hh"
 #include "client/varied_program.hh"
@@ -19,9 +19,7 @@ static std::size_t u_texture = {};
 static GLuint vaobj = {};
 static GLuint vbo = {};
 
-static int texture_width = {};
-static int texture_height = {};
-static GLuint texture = {};
+static const Texture2D *texture = nullptr;
 
 void crosshair::init(void)
 {
@@ -50,28 +48,16 @@ void crosshair::init(void)
     glVertexAttribDivisor(0, 0);
     glVertexAttribPointer(0, 2, GL_FLOAT, false, sizeof(Vec2f), nullptr);
 
-    Image image = {};
-    if(!Image::load_rgba(image, "textures/gui/crosshair.png", true)) {
+    texture = resource::load<Texture2D>("textures/gui/crosshair.png", PURGE_PRECACHE, TEXTURE2D_LOAD_CLAMP_S | TEXTURE2D_LOAD_CLAMP_T | TEXTURE2D_LOAD_VFLIP);
+
+    if(!texture) {
+        spdlog::critical("crosshair: texture load failed");
         std::terminate();
     }
-
-    texture_width = image.width;
-    texture_height = image.height;
-
-    glGenTextures(1, &texture);
-    glBindTexture(GL_TEXTURE_2D, texture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, texture_width, texture_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image.pixels);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
-    Image::unload(image);
 }
 
 void crosshair::deinit(void)
 {
-    glDeleteTextures(1, &texture);
     glDeleteVertexArrays(1, &vaobj);
     glDeleteBuffers(1, &vbo);
     VariedProgram::destroy(program);
@@ -86,8 +72,8 @@ void crosshair::render(void)
 
     const int center_x = globals::width / 2;
     const int center_y = globals::height / 2;
-    const int scaled_width = cxpr::max<int>(texture_width, globals::gui_scale * texture_width / 2);
-    const int scaled_height = cxpr::max<int>(texture_height, globals::gui_scale * texture_height / 2);
+    const int scaled_width = cxpr::max<int>(texture->width, globals::gui_scale * texture->width / 2);
+    const int scaled_height = cxpr::max<int>(texture->height, globals::gui_scale * texture->height / 2);
 
     const int offset_x = center_x - scaled_width / 2;
     const int offset_y = center_y - scaled_height / 2;
@@ -102,7 +88,7 @@ void crosshair::render(void)
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, texture);
+    glBindTexture(GL_TEXTURE_2D, texture->handle);
 
     glUseProgram(program.handle);
     glUniform1i(program.uniforms[u_texture].location, 0); // GL_TEXTURE0

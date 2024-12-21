@@ -6,12 +6,12 @@
 
 #include "mathlib/constexpr.hh"
 
-#include "common/image.hh"
-
 #include "client/event/language_set.hh"
 #include "client/event/glfw_key.hh"
 
 #include "client/gui/gui_screen.hh"
+
+#include "client/resource/texture2D.hh"
 
 #include "client/globals.hh"
 #include "client/session.hh"
@@ -25,10 +25,8 @@ static std::string str_settings = {};
 static std::string str_leave = {};
 static std::string str_quit = {};
 
-static int title_width = {};
-static int title_height = {};
-static float title_aspect = {};
-static GLuint title = {};
+static const Texture2D *title = nullptr;
+static float title_aspect = 0.0f;
 
 static void on_glfw_key(const GlfwKeyEvent &event)
 {
@@ -63,24 +61,14 @@ static void do_disconnect(void)
 
 void main_menu::init(void)
 {
-    Image image = {};
-    if(!Image::load_rgba(image, "textures/gui/voxelius.png", false)) {
+    title = resource::load<Texture2D>("textures/gui/voxelius.png", PURGE_PRECACHE, TEXTURE2D_LOAD_CLAMP_S | TEXTURE2D_LOAD_CLAMP_T);
+
+    if(!title) {
+        spdlog::critical("main_menu: texture load failed");
         std::terminate();
     }
 
-    title_width = image.width;
-    title_height = image.height;
-    title_aspect = static_cast<float>(title_width) / static_cast<float>(title_height);
-
-    glGenTextures(1, &title);
-    glBindTexture(GL_TEXTURE_2D, title);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, title_width, title_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image.pixels);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);    
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);    
-
-    Image::unload(image);
+    title_aspect = static_cast<float>(title->width) / static_cast<float>(title->height);
 
     globals::dispatcher.sink<GlfwKeyEvent>().connect<&on_glfw_key>();
     globals::dispatcher.sink<LanguageSetEvent>().connect<&on_language_set>();
@@ -88,7 +76,7 @@ void main_menu::init(void)
 
 void main_menu::deinit(void)
 {
-    glDeleteTextures(1, &title);
+
 }
 
 void main_menu::layout(void)
@@ -108,7 +96,7 @@ void main_menu::layout(void)
             const float image_width = cxpr::min(window_size.x, reference_height * title_aspect);
             const float image_height = image_width / title_aspect;
             ImGui::SetCursorPosX(0.5f * (window_size.x - image_width));
-            ImGui::Image(reinterpret_cast<ImTextureID>(static_cast<std::uintptr_t>(title)), ImVec2(image_width, image_height));
+            ImGui::Image(title->imgui, ImVec2(image_width, image_height));
         }
         else {
             ImGui::Dummy(ImVec2(0.0f, 32.0f * globals::gui_scale));

@@ -15,6 +15,8 @@
 #include <sstream>
 #include <string>
 #include <thread>
+#include <typeindex>
+#include <typeinfo>
 #include <type_traits>
 #include <unordered_map>
 #include <utility>

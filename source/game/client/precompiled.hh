@@ -13,10 +13,13 @@
 #include <chrono>
 #include <deque>
 #include <functional>
+#include <memory>
 #include <random>
 #include <sstream>
 #include <string>
 #include <thread>
+#include <typeindex>
+#include <typeinfo>
 #include <type_traits>
 #include <unordered_map>
 #include <unordered_set>

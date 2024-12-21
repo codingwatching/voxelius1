@@ -37,6 +37,8 @@ if(BUILD_CLIENT)
         "${CMAKE_CURRENT_LIST_DIR}/gui/splash.hh"
         "${CMAKE_CURRENT_LIST_DIR}/hud/hotbar.cc"
         "${CMAKE_CURRENT_LIST_DIR}/hud/hotbar.hh"
+        "${CMAKE_CURRENT_LIST_DIR}/resource/texture2D.cc"
+        "${CMAKE_CURRENT_LIST_DIR}/resource/texture2D.hh"
         "${CMAKE_CURRENT_LIST_DIR}/world/chunk_mesher.cc"
         "${CMAKE_CURRENT_LIST_DIR}/world/chunk_mesher.hh"
         "${CMAKE_CURRENT_LIST_DIR}/world/chunk_quad.hh"

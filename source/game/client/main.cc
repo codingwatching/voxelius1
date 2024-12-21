@@ -5,10 +5,12 @@
 
 #include "mathlib/constexpr.hh"
 
+#include "common/resource/image.hh"
+#include "common/resource/resource.hh"
+
 #include "common/cmdline.hh"
 #include "common/config.hh"
 #include "common/epoch.hh"
-#include "common/image.hh"
 #include "common/strtools.hh"
 
 #include "shared/motd.hh"
@@ -19,6 +21,8 @@
 #include "client/event/glfw_key.hh"
 #include "client/event/glfw_mouse_button.hh"
 #include "client/event/glfw_scroll.hh"
+
+#include "client/resource/texture2D.hh"
 
 #include "client/const.hh"
 #include "client/game.hh"
@@ -127,8 +131,6 @@ int main(int argc, char **argv)
 {
     cmdline::append(argc, argv);
 
-    shared::setup(argc, argv);
-
 #if defined(_WIN32)
 #if defined(NDEBUG)
     if(GetConsoleWindow() && !cmdline::contains("preserve-winconsole") && !cmdline::contains("dev")) {
@@ -144,6 +146,10 @@ int main(int argc, char **argv)
     }
 #endif
 #endif
+
+    shared::setup(argc, argv);
+
+    resource::register_loader<Texture2D>(std::make_shared<Texture2DLoader>());
 
     spdlog::info("client: game version: {}", PROJECT_VERSION_STRING);
 
@@ -183,17 +189,13 @@ int main(int argc, char **argv)
 
     glfwSetMonitorCallback(&on_glfw_monitor_event);
 
-    Image image = {};
-    GLFWimage icon = {};
-
-    if(Image::load_rgba(image, "textures/gui/window_icon.png", false)) {
-        icon.width = image.width;
-        icon.height = image.height;
-        icon.pixels = reinterpret_cast<unsigned char *>(image.pixels);
+    if(auto image = resource::load<Image>("textures/gui/window_icon.png", PURGE_INIT)) {
+        GLFWimage icon = {};
+        icon.width = image->width;
+        icon.height = image->height;
+        icon.pixels = reinterpret_cast<unsigned char *>(image->pixels);
 
         glfwSetWindowIcon(globals::window, 1, &icon);
-
-        Image::unload(image);
     }
 
     glfwMakeContextCurrent(globals::window);
@@ -272,6 +274,8 @@ int main(int argc, char **argv)
 
     client_game::init();
 
+    resource::purge(PURGE_INIT);
+
     int wwidth, wheight;
     glfwGetFramebufferSize(globals::window, &wwidth, &wheight);
     on_glfw_framebuffer_size(globals::window, wwidth, wheight);
@@ -279,6 +283,8 @@ int main(int argc, char **argv)
     Config::load(globals::client_config, "client.conf");
 
     client_game::init_late();
+
+    resource::purge(PURGE_INIT_LATE);
 
     std::uint64_t last_curtime = globals::curtime;
 
@@ -299,6 +305,8 @@ int main(int argc, char **argv)
         ImGui::NewFrame();
 
         client_game::update();
+
+        resource::purge(PURGE_UPDATE);
 
         if(!glfwGetWindowAttrib(globals::window, GLFW_ICONIFIED)) {
             glDisable(GL_BLEND);
@@ -338,6 +346,8 @@ int main(int argc, char **argv)
 
         client_game::update_late();
 
+        resource::purge(PURGE_UPDATE_LATE);
+
         glfwPollEvents();
 
         // EnTT provides two ways of dispatching events:
@@ -350,11 +360,13 @@ int main(int argc, char **argv)
         globals::framecount += 1;
     }
 
+    client_game::deinit();
+
+    resource::purge(PURGE_PRECACHE);
+
     spdlog::info("client: shutdown after {} frames", globals::framecount);
     spdlog::info("client: average framerate: {:.03f} FPS", 1.0f / globals::frametime_avg);
     spdlog::info("client: average frametime: {:.03f} ms", 1000.0f * globals::frametime_avg);
-
-    client_game::deinit();
 
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();

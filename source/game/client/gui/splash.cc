@@ -7,13 +7,14 @@
 #include "common/epoch.hh"
 #include "common/cmdline.hh"
 #include "common/fstools.hh"
-#include "common/image.hh"
 
 #include "client/event/glfw_key.hh"
 #include "client/event/glfw_mouse_button.hh"
 #include "client/event/glfw_scroll.hh"
 
 #include "client/gui/language.hh"
+
+#include "client/resource/texture2D.hh"
 
 #include "client/globals.hh"
 
@@ -24,9 +25,10 @@ constexpr static int SPLASH_COUNT = 4;
 constexpr static std::size_t DELAY_MICROSECONDS = 2000000;
 constexpr static const char *SPLASH_FORMAT = "textures/gui/untolabs.{}.png";
 
-static GLuint texture;
+static const Texture2D *texture = nullptr;
 static float texture_aspect;
 static float texture_alpha;
+
 static std::uint64_t end_time;
 
 static void on_glfw_key(const GlfwKeyEvent &event)
@@ -46,10 +48,8 @@ static void on_glfw_scroll(const GlfwScrollEvent &event)
 
 void splash::init(void)
 {
-    Image image = {};
-
     if(cmdline::contains("nosplash")) {
-        texture = 0;
+        texture = nullptr;
         texture_aspect = 0.0f;
         texture_alpha = 0.0f;
         return;
@@ -57,29 +57,16 @@ void splash::init(void)
 
     std::random_device randev = {};
     std::uniform_int_distribution<int> dist(0, SPLASH_COUNT - 1);
-    auto path = fmt::format(SPLASH_FORMAT, dist(randev));
+    std::string path = fmt::format(SPLASH_FORMAT, dist(randev));
 
-    if(!image.load_rgba(image, path, false)) {
-        spdlog::warn("splash: {}: {}", path, fstools::error());
+    texture = resource::load<Texture2D>(path, PURGE_INIT_LATE, TEXTURE2D_LOAD_CLAMP_S | TEXTURE2D_LOAD_CLAMP_T);
+    texture_aspect = 0.0f;
+    texture_alpha = 0.0f;
 
-        texture = 0;
-        texture_aspect = 0.0f;
-        texture_alpha = 0.0f;
-        return;
+    if(texture) {
+        texture_aspect = static_cast<float>(texture->width) / static_cast<float>(texture->height);
+        texture_alpha = 1.0f;
     }
-
-    glGenTextures(1, &texture);
-    glBindTexture(GL_TEXTURE_2D, texture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image.width, image.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image.pixels);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-    texture_aspect = static_cast<float>(image.width) / static_cast<float>(image.height);
-    texture_alpha = 1.0f;
-
-    Image::unload(image);
 }
 
 void splash::init_late(void)
@@ -106,6 +93,7 @@ void splash::init_late(void)
             break;
 
         texture_alpha = cxpr::smoothstep(0.15f, 0.5f, static_cast<float>(remains) / static_cast<float>(DELAY_MICROSECONDS));
+
         splash::render(skip_status);
     }
 
@@ -113,9 +101,7 @@ void splash::init_late(void)
     globals::dispatcher.sink<GlfwMouseButtonEvent>().disconnect<&on_glfw_mouse_button>();
     globals::dispatcher.sink<GlfwScrollEvent>().disconnect<&on_glfw_scroll>();
 
-    glDeleteTextures(1, &texture);
-
-    texture = 0;
+    texture = nullptr;
     texture_aspect = 0.0f;
     texture_alpha = 0.0f;
     end_time = UINT64_C(0);
@@ -167,10 +153,9 @@ void splash::render(const std::string &status)
         const ImVec2 uv_a = ImVec2(0.0f, 0.0f);
         const ImVec2 uv_b = ImVec2(1.0f, 1.0f);
         const ImVec4 tint = ImVec4(1.0f, 1.0f, 1.0f, texture_alpha);
-        ImTextureID texture_id = reinterpret_cast<ImTextureID>(static_cast<std::uintptr_t>(texture));
 
         ImGui::SetCursorPos(image_pos);
-        ImGui::Image(texture_id, image_size, uv_a, uv_b, tint);
+        ImGui::Image(texture->imgui, image_size, uv_a, uv_b, tint);
     }
 
     ImGui::End();

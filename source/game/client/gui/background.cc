@@ -5,7 +5,7 @@
 #include "mathlib/constexpr.hh"
 #include "mathlib/vec2f.hh"
 
-#include "common/image.hh"
+#include "client/resource/texture2D.hh"
 
 #include "client/globals.hh"
 #include "client/varied_program.hh"
@@ -17,9 +17,7 @@ static std::size_t u_scale = {};
 static GLuint vaobj = {};
 static GLuint vbo = {};
 
-static int texture_width = {};
-static int texture_height = {};
-static GLuint texture = {};
+static const Texture2D *texture = nullptr;
 
 void background::init(void)
 {
@@ -49,28 +47,16 @@ void background::init(void)
     glVertexAttribPointer(0, 2, GL_FLOAT, false, sizeof(Vec2f), nullptr);
     glVertexAttribDivisor(0, 0);
 
-    Image image = {};
-    if(!Image::load_rgba(image, std::string("textures/gui/background.png"), true)) {
+    texture = resource::load<Texture2D>("textures/gui/background.png", PURGE_PRECACHE, TEXTURE2D_LOAD_VFLIP);
+
+    if(!texture) {
+        spdlog::critical("background: texture load failed");
         std::terminate();
     }
-
-    texture_width = image.width;
-    texture_height = image.height;
-
-    glGenTextures(1, &texture);
-    glBindTexture(GL_TEXTURE_2D, texture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, texture_width, texture_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image.pixels);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
-    Image::unload(image);
 }
 
 void background::deinit(void)
 {
-    glDeleteTextures(1, &texture);
     glDeleteVertexArrays(1, &vaobj);
     glDeleteBuffers(1, &vbo);
     VariedProgram::destroy(program);
@@ -85,13 +71,13 @@ void background::render(void)
 
     const float scaled_width = 0.75f * static_cast<float>(globals::width / globals::gui_scale);
     const float scaled_height = 0.75f * static_cast<float>(globals::height / globals::gui_scale);
-    const float scale_x = scaled_width / static_cast<float>(texture_width);
-    const float scale_y = scaled_height / static_cast<float>(texture_height);
+    const float scale_x = scaled_width / static_cast<float>(texture->width);
+    const float scale_y = scaled_height / static_cast<float>(texture->height);
 
     glDisable(GL_DEPTH_TEST);
 
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, texture);
+    glBindTexture(GL_TEXTURE_2D, texture->handle);
 
     glUseProgram(program.handle);
     glUniform2f(program.uniforms[u_scale].location, scale_x, scale_y);

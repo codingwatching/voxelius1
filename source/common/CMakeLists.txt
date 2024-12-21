@@ -1,4 +1,8 @@
 add_library(common STATIC
+    "${CMAKE_CURRENT_LIST_DIR}/resource/image.cc"
+    "${CMAKE_CURRENT_LIST_DIR}/resource/image.hh"
+    "${CMAKE_CURRENT_LIST_DIR}/resource/resource.cc"
+    "${CMAKE_CURRENT_LIST_DIR}/resource/resource.hh"
     "${CMAKE_CURRENT_LIST_DIR}/cmdline.cc"
     "${CMAKE_CURRENT_LIST_DIR}/cmdline.hh"
     "${CMAKE_CURRENT_LIST_DIR}/config.cc"
@@ -9,8 +13,6 @@ add_library(common STATIC
     "${CMAKE_CURRENT_LIST_DIR}/epoch.hh"
     "${CMAKE_CURRENT_LIST_DIR}/fstools.cc"
     "${CMAKE_CURRENT_LIST_DIR}/fstools.hh"
-    "${CMAKE_CURRENT_LIST_DIR}/image.cc"
-    "${CMAKE_CURRENT_LIST_DIR}/image.hh"
     "${CMAKE_CURRENT_LIST_DIR}/packet_buffer.cc"
     "${CMAKE_CURRENT_LIST_DIR}/packet_buffer.hh"
     "${CMAKE_CURRENT_LIST_DIR}/precompiled.hh"
@@ -18,7 +20,7 @@ add_library(common STATIC
     "${CMAKE_CURRENT_LIST_DIR}/strtools.hh")
 target_include_directories(common PRIVATE "${PROJECT_SOURCE_DIR}/source")
 target_precompile_headers(common PRIVATE "${CMAKE_CURRENT_LIST_DIR}/precompiled.hh")
-target_link_libraries(common PUBLIC physfs spdlog stb)
+target_link_libraries(common PUBLIC emhash physfs spdlog stb)
 target_link_libraries(common PUBLIC mathlib)
 
 if(WIN32)

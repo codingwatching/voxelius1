@@ -4,9 +4,10 @@
 
 #include "mathlib/constexpr.hh"
 
+#include "common/resource/image.hh"
+
 #include "common/crc64.hh"
 #include "common/fstools.hh"
-#include "common/image.hh"
 
 
 struct AtlasPlane final {
@@ -62,26 +63,16 @@ static AtlasStrip *plane_new_strip(AtlasPlane &plane, const std::vector<std::str
     
     glBindTexture(GL_TEXTURE_2D_ARRAY, plane.gl_texture);
     
-    // FIXME: can we maybe figure out a service
-    // to NOT load the same image multiple times?
-    // I mean, it makes sense if we don't waste system resources.
     for(std::size_t i = 0; i < paths.size(); ++i) {
-        Image image = {};
-        
-        if(!Image::load_rgba(image, paths[i], true)) {
-            //spdlog::warn("atlas: {}: {}", paths[i], fstools::error());
-            continue;
+        if(auto image = resource::load<Image>(paths[i], PURGE_INIT_LATE, IMAGE_LOAD_VFLIP)) {
+            if((image->width != atlas_width) || (image->height != atlas_height)) {
+                spdlog::warn("atlas: {}: size mismatch", paths[i]);
+                continue;
+            }
+
+            const std::size_t offset = strip.offset + i;
+            glTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, 0, 0, offset, image->width, image->height, 1, GL_RGBA, GL_UNSIGNED_BYTE, image->pixels);
         }
-        
-        if((image.width != atlas_width) || (image.height != atlas_height)) {
-            spdlog::warn("atlas: {}: size mismatch", paths[i]);
-            Image::unload(image);
-            continue;
-        }
-        
-        const std::size_t offset = strip.offset + i;
-        glTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, 0, 0, offset, image.width, image.height, 1, GL_RGBA, GL_UNSIGNED_BYTE, image.pixels);
-        Image::unload(image);
     }
     
     plane.layer_count += paths.size();
