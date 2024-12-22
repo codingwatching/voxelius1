@@ -47,7 +47,7 @@ static void on_login_response_packet(const protocol::LoginResponse &packet)
     globals::session_send_time = 0;
     globals::session_username = packet.username;
     
-    progress::set_title("connecting.loading_world");    
+    progress::set_title("connecting.loading_world");
 }
 
 static void on_disconnect_packet(const protocol::Disconnect &packet)

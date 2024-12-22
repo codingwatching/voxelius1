@@ -23,7 +23,7 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 set(BUILD_CLIENT ON CACHE BOOL "Build Voxelius client executable")
 set(BUILD_SERVER ON CACHE BOOL "Build Voxelius server executable")
 
-set(ENABLE_EXPERIMENTS OFF CACHE BOOL "Enable basic experimental features")
+set(ENABLE_EXPERIMENTS ON CACHE BOOL "Enable basic experimental features")
 
 # Ensure we're statically linking to all the dependencies that we
 # pull and build by ourselves; I cannot guarantee that the packaging
