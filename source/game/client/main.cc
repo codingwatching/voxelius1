@@ -5,8 +5,8 @@
 
 #include "mathlib/constexpr.hh"
 
+#include "common/resource/binary_file.hh"
 #include "common/resource/image.hh"
-#include "common/resource/resource.hh"
 
 #include "common/cmdline.hh"
 #include "common/config.hh"
@@ -149,8 +149,6 @@ int main(int argc, char **argv)
 
     shared::setup(argc, argv);
 
-    resource::register_loader<Texture2D>(std::make_shared<Texture2DLoader>());
-
     spdlog::info("client: game version: {}", PROJECT_VERSION_STRING);
 
     glfwSetErrorCallback(&on_glfw_error);
@@ -189,7 +187,7 @@ int main(int argc, char **argv)
 
     glfwSetMonitorCallback(&on_glfw_monitor_event);
 
-    if(auto image = resource::load<Image>("textures/gui/window_icon.png", PURGE_INIT)) {
+    if(auto image = resource::load<Image>("textures/gui/window_icon.png")) {
         GLFWimage icon = {};
         icon.width = image->width;
         icon.height = image->height;
@@ -274,8 +272,6 @@ int main(int argc, char **argv)
 
     client_game::init();
 
-    resource::purge(PURGE_INIT);
-
     int wwidth, wheight;
     glfwGetFramebufferSize(globals::window, &wwidth, &wheight);
     on_glfw_framebuffer_size(globals::window, wwidth, wheight);
@@ -283,8 +279,6 @@ int main(int argc, char **argv)
     Config::load(globals::client_config, "client.conf");
 
     client_game::init_late();
-
-    resource::purge(PURGE_INIT_LATE);
 
     std::uint64_t last_curtime = globals::curtime;
 
@@ -305,8 +299,6 @@ int main(int argc, char **argv)
         ImGui::NewFrame();
 
         client_game::update();
-
-        resource::purge(PURGE_UPDATE);
 
         if(!glfwGetWindowAttrib(globals::window, GLFW_ICONIFIED)) {
             glDisable(GL_BLEND);
@@ -346,8 +338,6 @@ int main(int argc, char **argv)
 
         client_game::update_late();
 
-        resource::purge(PURGE_UPDATE_LATE);
-
         glfwPollEvents();
 
         // EnTT provides two ways of dispatching events:
@@ -358,11 +348,19 @@ int main(int argc, char **argv)
         globals::dispatcher.update();
 
         globals::framecount += 1;
+
+        resource::soft_cleanup<BinaryFile>();
+        resource::soft_cleanup<Image>();
+
+        resource::soft_cleanup<Texture2D>();
     }
 
     client_game::deinit();
 
-    resource::purge(PURGE_PRECACHE);
+    resource::hard_cleanup<BinaryFile>();
+    resource::hard_cleanup<Image>();
+
+    resource::hard_cleanup<Texture2D>();
 
     spdlog::info("client: shutdown after {} frames", globals::framecount);
     spdlog::info("client: average framerate: {:.03f} FPS", 1.0f / globals::frametime_avg);

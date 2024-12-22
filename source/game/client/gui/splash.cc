@@ -25,7 +25,7 @@ constexpr static int SPLASH_COUNT = 4;
 constexpr static std::size_t DELAY_MICROSECONDS = 2000000;
 constexpr static const char *SPLASH_FORMAT = "textures/gui/untolabs.{}.png";
 
-static const Texture2D *texture = nullptr;
+static std::shared_ptr<const Texture2D> texture = nullptr;
 static float texture_aspect;
 static float texture_alpha;
 
@@ -59,7 +59,7 @@ void splash::init(void)
     std::uniform_int_distribution<int> dist(0, SPLASH_COUNT - 1);
     std::string path = fmt::format(SPLASH_FORMAT, dist(randev));
 
-    texture = resource::load<Texture2D>(path, PURGE_INIT_LATE, TEXTURE2D_LOAD_CLAMP_S | TEXTURE2D_LOAD_CLAMP_T);
+    texture = resource::load<Texture2D>(path, TEXTURE2D_LOAD_CLAMP_S | TEXTURE2D_LOAD_CLAMP_T);
     texture_aspect = 0.0f;
     texture_alpha = 0.0f;
 

@@ -25,7 +25,7 @@ static std::string str_settings = {};
 static std::string str_leave = {};
 static std::string str_quit = {};
 
-static const Texture2D *title = nullptr;
+static std::shared_ptr<const Texture2D> title = nullptr;
 static float title_aspect = 0.0f;
 
 static void on_glfw_key(const GlfwKeyEvent &event)
@@ -61,7 +61,7 @@ static void do_disconnect(void)
 
 void main_menu::init(void)
 {
-    title = resource::load<Texture2D>("textures/gui/voxelius.png", PURGE_PRECACHE, TEXTURE2D_LOAD_CLAMP_S | TEXTURE2D_LOAD_CLAMP_T);
+    title = resource::load<Texture2D>("textures/gui/voxelius.png", TEXTURE2D_LOAD_CLAMP_S | TEXTURE2D_LOAD_CLAMP_T);
 
     if(!title) {
         spdlog::critical("main_menu: texture load failed");
@@ -76,7 +76,7 @@ void main_menu::init(void)
 
 void main_menu::deinit(void)
 {
-
+    title = nullptr;
 }
 
 void main_menu::layout(void)

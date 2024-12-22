@@ -64,7 +64,7 @@ static AtlasStrip *plane_new_strip(AtlasPlane &plane, const std::vector<std::str
     glBindTexture(GL_TEXTURE_2D_ARRAY, plane.gl_texture);
     
     for(std::size_t i = 0; i < paths.size(); ++i) {
-        if(auto image = resource::load<Image>(paths[i], PURGE_INIT_LATE, IMAGE_LOAD_VFLIP)) {
+        if(auto image = resource::load<Image>(paths[i], IMAGE_LOAD_VFLIP)) {
             if((image->width != atlas_width) || (image->height != atlas_height)) {
                 spdlog::warn("atlas: {}: size mismatch", paths[i]);
                 continue;

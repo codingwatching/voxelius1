@@ -17,7 +17,7 @@ static std::size_t u_scale = {};
 static GLuint vaobj = {};
 static GLuint vbo = {};
 
-static const Texture2D *texture = nullptr;
+static std::shared_ptr<const Texture2D> texture = nullptr;
 
 void background::init(void)
 {
@@ -47,7 +47,7 @@ void background::init(void)
     glVertexAttribPointer(0, 2, GL_FLOAT, false, sizeof(Vec2f), nullptr);
     glVertexAttribDivisor(0, 0);
 
-    texture = resource::load<Texture2D>("textures/gui/background.png", PURGE_PRECACHE, TEXTURE2D_LOAD_VFLIP);
+    texture = resource::load<Texture2D>("textures/gui/background.png", TEXTURE2D_LOAD_VFLIP);
 
     if(!texture) {
         spdlog::critical("background: texture load failed");
@@ -57,6 +57,7 @@ void background::init(void)
 
 void background::deinit(void)
 {
+    texture = nullptr;
     glDeleteVertexArrays(1, &vaobj);
     glDeleteBuffers(1, &vbo);
     VariedProgram::destroy(program);

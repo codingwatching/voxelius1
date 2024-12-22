@@ -15,11 +15,3 @@ struct Texture2D final {
     int height;
     int width;
 };
-
-class Texture2DLoader final : public IResourceLoader {
-public:
-    explicit Texture2DLoader(void) = default;
-    virtual ~Texture2DLoader(void) override = default;
-    virtual const void *load(const std::string &path, unsigned int flags) const override;
-    virtual void unload(const void *object) const override;
-};

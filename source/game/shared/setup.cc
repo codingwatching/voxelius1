@@ -2,10 +2,6 @@
 #include "shared/precompiled.hh"
 #include "shared/setup.hh"
 
-#include "common/resource/binary_file.hh"
-#include "common/resource/image.hh"
-#include "common/resource/resource.hh"
-
 #include "common/cmdline.hh"
 #include "common/fstools.hh"
 
@@ -140,15 +136,10 @@ void shared::setup(int argc, char **argv)
         spdlog::critical("enet: init failed");
         std::terminate();
     }
-
-    resource::register_loader<BinaryFile>(std::make_shared<BinaryFileLoader>());
-    resource::register_loader<Image>(std::make_shared<ImageLoader>());
 }
 
 void shared::desetup(void)
 {
-    resource::shutdown();
-
     enet_deinitialize();
 
     if(!PHYSFS_deinit()) {

@@ -28,8 +28,8 @@ static std::uint64_t slot_spawn = UINT64_MAX;
 static std::string slot_text = std::string();
 static int hotbar_keys[HOTBAR_SIZE];
 
-static const Texture2D *hotbar_texture = nullptr;
-static const Texture2D *hotbar_selection = nullptr;
+static std::shared_ptr<const Texture2D> hotbar_texture = nullptr;
+static std::shared_ptr<const Texture2D> hotbar_selection = nullptr;
 
 static ImU32 get_color_alpha(ImGuiCol style_color, float alpha)
 {
@@ -116,8 +116,8 @@ void hotbar::init(void)
     settings::add_key_binding(17, settings::KEYBOARD_GAMEPLAY, "hotbar.key.7", hotbar_keys[7]);
     settings::add_key_binding(18, settings::KEYBOARD_GAMEPLAY, "hotbar.key.8", hotbar_keys[8]);
 
-    hotbar_texture = resource::load<Texture2D>("textures/hud/hotbar.png", PURGE_PRECACHE, TEXTURE2D_LOAD_CLAMP_S | TEXTURE2D_LOAD_CLAMP_T);
-    hotbar_selection = resource::load<Texture2D>("textures/hud/hotbar_selection.png", PURGE_PRECACHE, TEXTURE2D_LOAD_CLAMP_S | TEXTURE2D_LOAD_CLAMP_T);
+    hotbar_texture = resource::load<Texture2D>("textures/hud/hotbar.png", TEXTURE2D_LOAD_CLAMP_S | TEXTURE2D_LOAD_CLAMP_T);
+    hotbar_selection = resource::load<Texture2D>("textures/hud/hotbar_selection.png", TEXTURE2D_LOAD_CLAMP_S | TEXTURE2D_LOAD_CLAMP_T);
 
     globals::dispatcher.sink<GlfwKeyEvent>().connect<&on_glfw_key>();
     globals::dispatcher.sink<GlfwScrollEvent>().connect<&on_glfw_scroll>();
@@ -125,7 +125,8 @@ void hotbar::init(void)
 
 void hotbar::deinit(void)
 {
-
+    hotbar_texture = nullptr;
+    hotbar_selection = nullptr;
 }
 
 void hotbar::layout(void)

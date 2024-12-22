@@ -67,8 +67,8 @@
 #include "client/experiments.hh"
 #endif /* ENABLE_EXPERIMENTS */
 
-static const BinaryFile *bin_unscii16 = nullptr;
-static const BinaryFile *bin_unscii8 = nullptr;
+static std::shared_ptr<const BinaryFile> bin_unscii16 = nullptr;
+static std::shared_ptr<const BinaryFile> bin_unscii8 = nullptr;
 
 bool client_game::streamer_mode = false;
 bool client_game::vertical_sync = true;
@@ -162,8 +162,8 @@ static void on_glfw_framebuffer_size(const GlfwFramebufferSizeEvent &event)
 
 void client_game::init(void)
 {
-    bin_unscii16 = resource::load<BinaryFile>("fonts/unscii-16.ttf", PURGE_PRECACHE);
-    bin_unscii8 = resource::load<BinaryFile>("fonts/unscii-8.ttf", PURGE_PRECACHE);
+    bin_unscii16 = resource::load<BinaryFile>("fonts/unscii-16.ttf");
+    bin_unscii8 = resource::load<BinaryFile>("fonts/unscii-8.ttf");
 
     if(!bin_unscii16 || !bin_unscii8) {
         spdlog::critical("client_game: font loading failed");
@@ -416,6 +416,9 @@ void client_game::deinit(void)
     globals::registry.clear();
 
     enet_host_destroy(globals::client_host);
+
+    bin_unscii8 = nullptr;
+    bin_unscii16 = nullptr;
 }
 
 void client_game::update(void)

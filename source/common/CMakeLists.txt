@@ -3,7 +3,6 @@ add_library(common STATIC
     "${CMAKE_CURRENT_LIST_DIR}/resource/binary_file.hh"
     "${CMAKE_CURRENT_LIST_DIR}/resource/image.cc"
     "${CMAKE_CURRENT_LIST_DIR}/resource/image.hh"
-    "${CMAKE_CURRENT_LIST_DIR}/resource/resource.cc"
     "${CMAKE_CURRENT_LIST_DIR}/resource/resource.hh"
     "${CMAKE_CURRENT_LIST_DIR}/cmdline.cc"
     "${CMAKE_CURRENT_LIST_DIR}/cmdline.hh"

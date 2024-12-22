@@ -19,7 +19,7 @@ static std::size_t u_texture = {};
 static GLuint vaobj = {};
 static GLuint vbo = {};
 
-static const Texture2D *texture = nullptr;
+static std::shared_ptr<const Texture2D> texture = nullptr;
 
 void crosshair::init(void)
 {
@@ -48,7 +48,7 @@ void crosshair::init(void)
     glVertexAttribDivisor(0, 0);
     glVertexAttribPointer(0, 2, GL_FLOAT, false, sizeof(Vec2f), nullptr);
 
-    texture = resource::load<Texture2D>("textures/gui/crosshair.png", PURGE_PRECACHE, TEXTURE2D_LOAD_CLAMP_S | TEXTURE2D_LOAD_CLAMP_T | TEXTURE2D_LOAD_VFLIP);
+    texture = resource::load<Texture2D>("textures/gui/crosshair.png", TEXTURE2D_LOAD_CLAMP_S | TEXTURE2D_LOAD_CLAMP_T | TEXTURE2D_LOAD_VFLIP);
 
     if(!texture) {
         spdlog::critical("crosshair: texture load failed");
@@ -58,6 +58,7 @@ void crosshair::init(void)
 
 void crosshair::deinit(void)
 {
+    texture = nullptr;
     glDeleteVertexArrays(1, &vaobj);
     glDeleteBuffers(1, &vbo);
     VariedProgram::destroy(program);
