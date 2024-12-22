@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BSD-2-Clause
 // Copyright (C) 2024, untodesu
 #include "client/precompiled.hh"
-#include "client/gui/crosshair.hh"
+#include "client/hud/crosshair.hh"
 
 #include "mathlib/mat4x4f.hh"
 #include "mathlib/vec2f.hh"
@@ -48,7 +48,7 @@ void crosshair::init(void)
     glVertexAttribDivisor(0, 0);
     glVertexAttribPointer(0, 2, GL_FLOAT, false, sizeof(Vec2f), nullptr);
 
-    texture = resource::load<Texture2D>("textures/gui/crosshair.png", TEXTURE2D_LOAD_CLAMP_S | TEXTURE2D_LOAD_CLAMP_T | TEXTURE2D_LOAD_VFLIP);
+    texture = resource::load<Texture2D>("textures/hud/crosshair.png", TEXTURE2D_LOAD_CLAMP_S | TEXTURE2D_LOAD_CLAMP_T | TEXTURE2D_LOAD_VFLIP);
 
     if(!texture) {
         spdlog::critical("crosshair: texture load failed");

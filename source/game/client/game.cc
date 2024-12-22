@@ -27,7 +27,6 @@
 
 #include "client/gui/background.hh"
 #include "client/gui/chat.hh"
-#include "client/gui/crosshair.hh"
 #include "client/gui/gui_screen.hh"
 #include "client/gui/language.hh"
 #include "client/gui/main_menu.hh"
@@ -39,6 +38,7 @@
 #include "client/gui/settings.hh"
 #include "client/gui/splash.hh"
 
+#include "client/hud/crosshair.hh"
 #include "client/hud/hotbar.hh"
 
 #include "client/world/chunk_mesher.hh"
