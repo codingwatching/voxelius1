@@ -39,7 +39,70 @@ static void use_classic_credentials(void)
     settings::add_input(1, settings::GENERAL, "login.classic_username", login::username, true, false);
 }
 
-static void use_itch_io_credentials_jwt(const char *itch_key)
+static void use_itch_io_credentials_dev(const char *api_token)
+{
+    spdlog::warn("login: using itch.io credentials");
+    spdlog::warn("login: using regular non-JWT API token!!!");
+
+    login::mode = protocol::LoginRequest::MODE_ITCH_IO;
+    login::identity = epoch::microseconds();
+    login::username = std::string("player");
+
+    curl_global_init(CURL_GLOBAL_DEFAULT);
+
+    auto curl = curl_easy_init();
+
+    if(curl == nullptr) {
+        spdlog::critical("login: curl_easy_init failed");
+        std::terminate();
+    }
+
+    curl_easy_setopt(curl, CURLOPT_URL, fmt::format("https://itch.io/api/1/{}/me", api_token).c_str());
+    curl_easy_setopt(curl, CURLOPT_CA_CACHE_TIMEOUT, 604800L);
+    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
+    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
+
+    std::string response_body;
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response_body);
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &response_body_callback);
+
+    auto result = curl_easy_perform(curl);
+    curl_easy_cleanup(curl);
+    curl_global_cleanup();
+
+    if(result != CURLE_OK) {
+        spdlog::critical("login: curl_easy_perform failed with error code {}", static_cast<int>(result));
+        std::terminate();
+    }
+
+    JSON_Value *jsonv = json_parse_string(response_body.c_str());
+    const JSON_Object *json = json_value_get_object(jsonv);
+    const JSON_Object *user = json_object_get_object(json, "user");
+    const char *json_username = json_object_get_string(user, "username");
+
+    if(jsonv == nullptr) {
+        spdlog::critical("login: malformed JSON response body");
+        std::terminate();
+    }
+
+    if((json == nullptr) || (user == nullptr)) {
+        spdlog::critical("login: malformed JSON response contents");
+        json_value_free(jsonv);
+        std::terminate();
+    }
+
+    if(json_username == nullptr) {
+        spdlog::critical("login: JSON response has no username");
+        json_value_free(jsonv);
+        std::terminate();
+    }
+
+    login::mode = protocol::LoginRequest::MODE_ITCH_IO;
+    login::identity = static_cast<std::uint64_t>(json_object_get_number(user, "id"));
+    login::username = std::string(json_username);
+}
+
+static void use_itch_io_credentials_jwt(const char *api_token)
 {
     spdlog::warn("login: using itch.io credentials");
 
@@ -62,7 +125,7 @@ static void use_itch_io_credentials_jwt(const char *itch_key)
     curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
 
     curl_slist *headers = nullptr;
-    headers = curl_slist_append(headers, fmt::format("Authorization: Bearer {}", itch_key).c_str());
+    headers = curl_slist_append(headers, fmt::format("Authorization: Bearer {}", api_token).c_str());
     curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
 
     std::string response_body;
@@ -113,8 +176,14 @@ void login::init(void)
         return;
     }
 
-    if(const char *itch_key = std::getenv("ITCHIO_API_KEY")) {
-        use_itch_io_credentials_jwt(itch_key);
+    std::string itch_api_token;
+    if(cmdline::get_value("itch-token", itch_api_token)) {
+        use_itch_io_credentials_dev(itch_api_token.c_str());
+        return;
+    }
+
+    if(const char *itch_api_token_jwt = std::getenv("ITCHIO_API_KEY")) {
+        use_itch_io_credentials_jwt(itch_api_token_jwt);
         return;
     }
 
