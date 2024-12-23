@@ -33,6 +33,7 @@
 
 #include "client/globals.hh"
 #include "client/login.hh"
+#include "client/presence.hh"
 #include "client/view.hh"
 
 
@@ -46,8 +47,10 @@ static void on_login_response_packet(const protocol::LoginResponse &packet)
     globals::session_tick_dt = static_cast<std::uint64_t>(1000000.0f / static_cast<float>(cxpr::max<std::uint16_t>(10, packet.tickrate)));
     globals::session_send_time = 0;
     globals::session_username = packet.username;
-    
+
     progress::set_title("connecting.loading_world");
+
+    presence::send_playing_multiplayer();
 }
 
 static void on_disconnect_packet(const protocol::Disconnect &packet)
@@ -78,6 +81,8 @@ static void on_disconnect_packet(const protocol::Disconnect &packet)
     globals::gui_screen = GUI_MESSAGE_BOX;
 
     globals::is_singleplayer = true;
+
+    presence::send_main_menu();
 }
 
 static void on_set_voxel_packet(const protocol::SetVoxel &packet)
@@ -177,6 +182,8 @@ void session::invalidate(void)
         globals::player = entt::null;
     globals::registry.clear();
     chunk_visibility::cleanup();
+
+    presence::send_main_menu();
 }
 
 void session::mp::connect(const std::string &host, std::uint16_t port)
@@ -203,6 +210,8 @@ void session::mp::connect(const std::string &host, std::uint16_t port)
 
         globals::gui_screen = GUI_MESSAGE_BOX;
 
+        presence::send_main_menu();
+
         return;
     }
 
@@ -225,6 +234,8 @@ void session::mp::connect(const std::string &host, std::uint16_t port)
         chunk_visibility::cleanup();
 
         globals::gui_screen = GUI_PLAY_MENU;
+
+        presence::send_main_menu();
     });
 
     globals::gui_screen = GUI_PROGRESS;
@@ -251,6 +262,8 @@ void session::mp::disconnect(const std::string &reason)
         chunk_visibility::cleanup();
         
         client_chat::clear();
+
+        presence::send_main_menu();
     }
 }
 
@@ -259,6 +272,7 @@ void session::mp::send_login_request(void)
     protocol::LoginRequest packet = {};
     packet.version = protocol::VERSION;
     packet.vdef_checksum = vdef::calc_checksum();
+    packet.login_mode = login::mode;
     packet.identity = login::identity;
     packet.username = login::username;
     protocol::send(globals::session_peer, nullptr, packet);
@@ -294,6 +308,8 @@ void session::sp::load_world(const std::string &universe_directory)
     globals::registry.emplace<VelocityComponent>(globals::player);
 
     globals::gui_screen = GUI_SCREEN_NONE;
+
+    presence::send_playing_singleplayer();
 }
 
 void session::sp::unload_world(void)
@@ -301,4 +317,6 @@ void session::sp::unload_world(void)
     universe::save_everything();
 
     session::invalidate();
+
+    presence::send_main_menu();
 }

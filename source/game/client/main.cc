@@ -131,6 +131,22 @@ int main(int argc, char **argv)
 {
     cmdline::append(argc, argv);
 
+#if defined(_WIN32)
+#if defined(NDEBUG)
+    if(GetConsoleWindow() && !cmdline::contains("preserve-winconsole") && !cmdline::contains("dev")) {
+        // Hide the console window on release builds
+        // unless explicitly specified to preserve it instead
+        FreeConsole();
+    }
+#else
+    if(GetConsoleWindow() && cmdline::contains("hide-winconsole")) {
+        // Do NOT hide the console window on debug builds
+        // unless explicitly specified to hide it instead
+        FreeConsole();
+    }
+#endif
+#endif
+
     shared::setup(argc, argv);
 
     spdlog::info("client: game version: {}", PROJECT_VERSION_STRING);
@@ -263,22 +279,6 @@ int main(int argc, char **argv)
     Config::load(globals::client_config, "client.conf");
 
     client_game::init_late();
-
-#if defined(_WIN32)
-#if defined(NDEBUG)
-    if(GetConsoleWindow() && !cmdline::contains("preserve-winconsole") && !cmdline::contains("dev")) {
-        // Hide the console window on release builds
-        // unless explicitly specified to preserve it instead
-        FreeConsole();
-    }
-#else
-    if(GetConsoleWindow() && cmdline::contains("hide-winconsole")) {
-        // Do NOT hide the console window on debug builds
-        // unless explicitly specified to hide it instead
-        FreeConsole();
-    }
-#endif
-#endif
 
     std::uint64_t last_curtime = globals::curtime;
 

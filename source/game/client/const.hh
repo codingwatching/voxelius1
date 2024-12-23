@@ -12,3 +12,8 @@ constexpr static int DEFAULT_HEIGHT = 480;
 
 static_assert(DEFAULT_WIDTH >= MIN_WIDTH);
 static_assert(DEFAULT_HEIGHT >= MIN_HEIGHT);
+
+constexpr static const char *DISCORD_APPID = "1277871547935100928";
+constexpr static const char *DISCORD_VCLIENT_ICON = "vclient";
+constexpr static const char *DISCORD_MP_ICON = "multiplayer";
+constexpr static const char *DISCORD_SP_ICON = "singleplayer";

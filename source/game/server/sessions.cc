@@ -26,6 +26,9 @@
 unsigned int sessions::max_players = 16U;
 unsigned int sessions::num_players = 0U;
 
+static bool allow_classic_logins = true;
+static bool allow_itch_io_logins = true;
+
 static std::unordered_map<std::uint64_t, Session *> sessions_map = {};
 static std::vector<Session> sessions_vector = {};
 
@@ -56,6 +59,16 @@ static void on_login_request_packet(const protocol::LoginRequest &packet)
 
     if(packet.vdef_checksum != vdef::calc_checksum()) {
         protocol::send_disconnect(packet.peer, nullptr, "protocol.vdef_checksum_mismatch");
+        return;
+    }
+
+    if((packet.login_mode == protocol::LoginRequest::MODE_CLASSIC) && !(allow_classic_logins)) {
+        protocol::send_disconnect(packet.peer, nullptr, "protocol.login_mode_rejected");
+        return;
+    }
+
+    if((packet.login_mode == protocol::LoginRequest::MODE_ITCH_IO) && !(allow_itch_io_logins)) {
+        protocol::send_disconnect(packet.peer, nullptr, "protocol.login_mode_rejected");
         return;
     }
 
@@ -163,6 +176,9 @@ void sessions::init(void)
 {
     Config::add(globals::server_config, "sessions.max_players", sessions::max_players);
 
+    Config::add(globals::server_config, "sessions.allow_classic", allow_classic_logins);
+    Config::add(globals::server_config, "sessions.allow_itch_io", allow_itch_io_logins);
+
     globals::dispatcher.sink<protocol::LoginRequest>().connect<&on_login_request_packet>();
     globals::dispatcher.sink<protocol::Disconnect>().connect<&on_disconnect_packet>();
 
@@ -177,6 +193,16 @@ void sessions::init_late(void)
 {
     sessions::max_players = cxpr::clamp<unsigned int>(sessions::max_players, 1U, UINT16_MAX);
     sessions::num_players = 0U;
+
+    bool allow_anything = false;
+    allow_anything = allow_anything || allow_classic_logins;
+    allow_anything = allow_anything || allow_itch_io_logins;
+
+    if(!allow_anything) {
+        spdlog::critical("sessions: server doesn't accept any connections");
+        spdlog::critical("sessions: please set at least one sessions.allow_xxxx value in server.conf to true");
+        std::terminate();
+    }
 
     sessions_vector.resize(sessions::max_players, Session());
 

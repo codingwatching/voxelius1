@@ -82,6 +82,7 @@
   "protocol.max_players": "No available player slot found",
   "protocol.password_incorrect": "Incorrect server password",
   "protocol.vdef_checksum_mismatch": "VDef2 checksum mismatch",
+  "protocol.login_mode_rejected": "Login mode rejected by server",
   "protocol.chunk_entity_mismatch": "Chunk entity desync",
   "protocol.client_disconnect": "Client disconnect",
   "protocol.client_shutdown": "Client shutdown",

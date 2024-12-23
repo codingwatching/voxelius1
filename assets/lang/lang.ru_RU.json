@@ -82,6 +82,7 @@
   "protocol.max_players": "Недостаточно свободных мест",
   "protocol.password_incorrect": "Некорректный пароль сервера",
   "protocol.vdef_checksum_mismatch": "Ошибка контрольной суммы VDef2",
+  "protocol.login_mode_rejected": "Режим аутентификации отклонен сервером",
   "protocol.chunk_entity_mismatch": "Рассинхрон чанковых сущностей",
   "protocol.client_disconnect": "Клиент разорвал соединение",
   "protocol.client_shutdown": "Клиент завершает работу",

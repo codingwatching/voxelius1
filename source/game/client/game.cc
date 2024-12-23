@@ -58,6 +58,7 @@
 #include "client/keynames.hh"
 #include "client/login.hh"
 #include "client/mouse.hh"
+#include "client/presence.hh"
 #include "client/receive.hh"
 #include "client/screenshot.hh"
 #include "client/session.hh"
@@ -323,6 +324,8 @@ void client_game::init(void)
 
     hotbar::init();
 
+    presence::init();
+
     globals::gui_keybind_ptr = nullptr;
     globals::gui_scale = 0U;
     globals::gui_screen = GUI_MAIN_MENU;
@@ -379,10 +382,14 @@ void client_game::init_late(void)
     client_receive::init();
 
     splash::init_late();
+
+    presence::send_main_menu();
 }
 
 void client_game::deinit(void)
 {
+    presence::deinit();
+
     session::deinit();
 
     hotbar::deinit();

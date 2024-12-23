@@ -73,6 +73,8 @@ if(BUILD_CLIENT)
         "${CMAKE_CURRENT_LIST_DIR}/main.cc"
         "${CMAKE_CURRENT_LIST_DIR}/mouse.cc"
         "${CMAKE_CURRENT_LIST_DIR}/mouse.hh"
+        "${CMAKE_CURRENT_LIST_DIR}/presence.cc"
+        "${CMAKE_CURRENT_LIST_DIR}/presence.hh"
         "${CMAKE_CURRENT_LIST_DIR}/precompiled.hh"
         "${CMAKE_CURRENT_LIST_DIR}/receive.cc"
         "${CMAKE_CURRENT_LIST_DIR}/receive.hh"
@@ -90,7 +92,7 @@ if(BUILD_CLIENT)
     target_include_directories(vclient PRIVATE "${PROJECT_SOURCE_DIR}/source")
     target_include_directories(vclient PRIVATE "${PROJECT_SOURCE_DIR}/source/game")
     target_precompile_headers(vclient PRIVATE "${CMAKE_CURRENT_LIST_DIR}/precompiled.hh")
-    target_link_libraries(vclient PUBLIC curl glad glfw3 imgui imgui_glfw imgui_opengl3)
+    target_link_libraries(vclient PUBLIC curl discord-rpc glad glfw3 imgui imgui_glfw imgui_opengl3)
     target_link_libraries(vclient PUBLIC shared)
 
     if(WIN32 AND MSVC)
