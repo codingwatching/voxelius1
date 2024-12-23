@@ -39,7 +39,7 @@ static void use_classic_credentials(void)
     settings::add_input(1, settings::GENERAL, "login.classic_username", login::username, true, false);
 }
 
-static void use_itch_io_credentials(const char *itch_key)
+static void use_itch_io_credentials_jwt(const char *itch_key)
 {
     spdlog::warn("login: using itch.io credentials");
 
@@ -62,7 +62,7 @@ static void use_itch_io_credentials(const char *itch_key)
     curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
 
     curl_slist *headers = nullptr;
-    curl_slist_append(headers, fmt::format("Authorization: Bearer {}", itch_key).c_str());
+    headers = curl_slist_append(headers, fmt::format("Authorization: Bearer {}", itch_key).c_str());
     curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
 
     std::string response_body;
@@ -70,6 +70,7 @@ static void use_itch_io_credentials(const char *itch_key)
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &response_body_callback);
 
     auto result = curl_easy_perform(curl);
+    curl_slist_free_all(headers);
     curl_easy_cleanup(curl);
     curl_global_cleanup();
 
@@ -113,7 +114,7 @@ void login::init(void)
     }
 
     if(const char *itch_key = std::getenv("ITCHIO_API_KEY")) {
-        use_itch_io_credentials(itch_key);
+        use_itch_io_credentials_jwt(itch_key);
         return;
     }
 
