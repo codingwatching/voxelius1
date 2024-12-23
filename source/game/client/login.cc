@@ -56,14 +56,16 @@ static void use_itch_io_credentials(const char *itch_key)
         std::terminate();
     }
 
-    std::string request = fmt::format("https://itch.io/api/1/{}/me", itch_key);
-    std::string response_body;
-
-    curl_easy_setopt(curl, CURLOPT_URL, request.c_str());
+    curl_easy_setopt(curl, CURLOPT_URL, "https://itch.io/api/1/jwt/me");
     curl_easy_setopt(curl, CURLOPT_CA_CACHE_TIMEOUT, 604800L);
     curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
     curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
 
+    curl_slist *headers = nullptr;
+    curl_slist_append(headers, fmt::format("Authorization: Bearer {}", itch_key).c_str());
+    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+
+    std::string response_body;
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response_body);
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &response_body_callback);
 

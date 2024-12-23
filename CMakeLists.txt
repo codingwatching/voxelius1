@@ -67,6 +67,7 @@ add_subdirectory(source/game/client)
 add_subdirectory(source/game/server)
 add_subdirectory(source/game/shared)
 
+install(FILES "${CMAKE_CURRENT_LIST_DIR}/.itch.toml" DESTINATION ".")
 install(FILES "${CMAKE_CURRENT_LIST_DIR}/LICENSE.txt" DESTINATION ".")
 install(FILES "${CMAKE_CURRENT_LIST_DIR}/LICENSE_assets.txt" DESTINATION ".")
 
