@@ -32,6 +32,7 @@
 #include "client/world/chunk_visibility.hh"
 
 #include "client/globals.hh"
+#include "client/login.hh"
 #include "client/view.hh"
 
 
@@ -258,8 +259,8 @@ void session::mp::send_login_request(void)
     protocol::LoginRequest packet = {};
     packet.version = protocol::VERSION;
     packet.vdef_checksum = vdef::calc_checksum();
-    packet.identity = globals::client_identity;
-    packet.username = globals::client_username;
+    packet.identity = login::identity;
+    packet.username = login::username;
     protocol::send(globals::session_peer, nullptr, packet);
     
     progress::set_title("connecting.logging_in");

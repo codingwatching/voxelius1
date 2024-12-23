@@ -20,9 +20,6 @@ extern float aspect;
 extern std::size_t num_drawcalls;
 extern std::size_t num_triangles;
 
-extern std::string client_username;
-extern std::uint64_t client_identity;
-
 extern ENetHost *client_host;
 
 extern ENetPeer *session_peer;

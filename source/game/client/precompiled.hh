@@ -26,6 +26,8 @@
 #include <utility>
 #include <vector>
 
+#include <curl/curl.h>
+
 // FIXME: including hash_set8.hpp is fucked up whenever
 // hash_table8.hpp is included. It doesn't even compile
 // possibly due some function re-definitions. Too bad!

@@ -68,6 +68,8 @@ if(BUILD_CLIENT)
         "${CMAKE_CURRENT_LIST_DIR}/keyboard.hh"
         "${CMAKE_CURRENT_LIST_DIR}/keynames.cc"
         "${CMAKE_CURRENT_LIST_DIR}/keynames.hh"
+        "${CMAKE_CURRENT_LIST_DIR}/login.cc"
+        "${CMAKE_CURRENT_LIST_DIR}/login.hh"
         "${CMAKE_CURRENT_LIST_DIR}/main.cc"
         "${CMAKE_CURRENT_LIST_DIR}/mouse.cc"
         "${CMAKE_CURRENT_LIST_DIR}/mouse.hh"
@@ -88,8 +90,7 @@ if(BUILD_CLIENT)
     target_include_directories(vclient PRIVATE "${PROJECT_SOURCE_DIR}/source")
     target_include_directories(vclient PRIVATE "${PROJECT_SOURCE_DIR}/source/game")
     target_precompile_headers(vclient PRIVATE "${CMAKE_CURRENT_LIST_DIR}/precompiled.hh")
-    target_link_directories(vclient PUBLIC "${LIBRARIES_BINARY_DIR}")
-    target_link_libraries(vclient PUBLIC glad glfw3 imgui imgui_glfw imgui_opengl3)
+    target_link_libraries(vclient PUBLIC curl glad glfw3 imgui imgui_glfw imgui_opengl3)
     target_link_libraries(vclient PUBLIC shared)
 
     if(WIN32 AND MSVC)

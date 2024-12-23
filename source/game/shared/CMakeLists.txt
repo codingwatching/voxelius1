@@ -50,6 +50,5 @@ add_library(shared STATIC
 target_include_directories(shared PRIVATE "${PROJECT_SOURCE_DIR}/source")
 target_include_directories(shared PRIVATE "${PROJECT_SOURCE_DIR}/source/game")
 target_precompile_headers(shared PRIVATE "${CMAKE_CURRENT_LIST_DIR}/precompiled.hh")
-target_link_directories(shared PUBLIC "${LIBRARIES_BINARY_DIR}")
 target_link_libraries(shared PUBLIC enet FNL miniz parson)
 target_link_libraries(shared PUBLIC common)

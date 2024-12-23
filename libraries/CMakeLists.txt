@@ -1,8 +1,23 @@
 set(LIBRARIES_INCLUDE_DIR "${CMAKE_CURRENT_LIST_DIR}/include")
 set(LIBRARIES_LICENSE_TXT "${CMAKE_CURRENT_LIST_DIR}/LEGAL_NOTICES.txt")
 
-add_subdirectory(win32)
-add_subdirectory(win64)
+if(WIN32)
+    set(LIBRARIES_BINARY_DIR "${CMAKE_CURRENT_LIST_DIR}/binary/win")
+elseif(UNIX AND NOT APPLE)
+    set(LIBRARIES_BINARY_DIR "${CMAKE_CURRENT_LIST_DIR}/binary/linux")
+elseif(APPLE)
+    set(LIBRARIES_BINARY_DIR "${CMAKE_CURRENT_LIST_DIR}/binary/apple")
+else()
+    message(FATAL_ERROR "Uncovered platform")
+endif()
+
+if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+    set(LIBRARIES_BINARY_DIR "${LIBRARIES_BINARY_DIR}64")
+    set(LIBCURL_DLL_SUFFIX "-x64")
+else()
+    set(LIBRARIES_BINARY_DIR "${LIBRARIES_BINARY_DIR}32")
+    set(LIBCURL_DLL_SUFFIX "")
+endif()
 
 add_subdirectory(source/enet)
 add_subdirectory(source/fastnoiselite)
@@ -14,7 +29,16 @@ add_subdirectory(source/physfs)
 add_subdirectory(source/spdlog)
 add_subdirectory(source/stb)
 
-set(LIBRARIES_BINARY_DIR "${LIBRARIES_BINARY_DIR}" PARENT_SCOPE)
+add_library(glfw3 STATIC IMPORTED GLOBAL)
+target_include_directories(glfw3 INTERFACE "${LIBRARIES_INCLUDE_DIR}")
+set_target_properties(glfw3 PROPERTIES IMPORTED_LOCATION "${LIBRARIES_BINARY_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}glfw3${CMAKE_STATIC_LIBRARY_SUFFIX}")
+
+add_library(curl SHARED IMPORTED GLOBAL)
+target_include_directories(curl INTERFACE "${LIBRARIES_INCLUDE_DIR}")
+set_target_properties(curl PROPERTIES IMPORTED_LOCATION "${LIBRARIES_BINARY_DIR}/libcurl${LIBCURL_DLL_SUFFIX}${CMAKE_SHARED_LIBRARY_SUFFIX}")
+set_target_properties(curl PROPERTIES IMPORTED_IMPLIB "${LIBRARIES_BINARY_DIR}/libcurl${CMAKE_STATIC_LIBRARY_SUFFIX}")
+install(FILES "${LIBRARIES_BINARY_DIR}/libcurl${LIBCURL_DLL_SUFFIX}${CMAKE_SHARED_LIBRARY_SUFFIX}" DESTINATION ".")
+
 set(LIBRARIES_INCLUDE_DIR "${LIBRARIES_INCLUDE_DIR}" PARENT_SCOPE)
 set(LIBRARIES_LICENSE_TXT "${LIBRARIES_LICENSE_TXT}" PARENT_SCOPE)
 

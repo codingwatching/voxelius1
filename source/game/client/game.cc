@@ -56,6 +56,7 @@
 #include "client/globals.hh"
 #include "client/keyboard.hh"
 #include "client/keynames.hh"
+#include "client/login.hh"
 #include "client/mouse.hh"
 #include "client/receive.hh"
 #include "client/screenshot.hh"
@@ -172,28 +173,11 @@ void client_game::init(void)
     splash::init();
     splash::render(std::string());
 
-    globals::client_username = "player";
-    globals::client_identity = epoch::microseconds();
-
     Config::add(globals::client_config, "game.streamer_mode", client_game::streamer_mode);
     Config::add(globals::client_config, "game.vertical_sync", client_game::vertical_sync);
     Config::add(globals::client_config, "game.world_curvature", client_game::world_curvature);
     Config::add(globals::client_config, "game.pixel_size", client_game::pixel_size);
     Config::add(globals::client_config, "game.fog_mode", client_game::fog_mode);
-
-    std::string username_argument;
-
-    if(cmdline::get_value("username", username_argument)) {
-        spdlog::warn("game: using command-line for player credentials");
-        globals::client_identity = crc64::get(username_argument);
-        globals::client_username = username_argument;
-    }
-    else {
-        spdlog::warn("game: using client_config for player credentials");
-        Config::add(globals::client_config, "game.username", globals::client_username);
-        Config::add(globals::client_config, "game.identity", globals::client_identity);
-        settings::add_input(1, settings::GENERAL, "game.username", globals::client_username, true, false);
-    }
 
     settings::add_checkbox(1, settings::VIDEO_GUI, "game.streamer_mode", client_game::streamer_mode, true);
     settings::add_checkbox(5, settings::VIDEO, "game.vertical_sync", client_game::vertical_sync, false);
@@ -207,6 +191,8 @@ void client_game::init(void)
         spdlog::critical("game: unable to setup an ENet host");
         std::terminate();
     }
+
+    login::init();
 
     language::init();
 
@@ -346,8 +332,7 @@ void client_game::init(void)
 
 void client_game::init_late(void)
 {
-    spdlog::debug("game: client username: {}", globals::client_username);
-    spdlog::debug("game: client identity: {}", globals::client_identity);
+    login::init_late();
 
     language::init_late();
 

@@ -100,8 +100,12 @@ struct protocol::StatusResponse final : public protocol::Base<0x0001> {
 };
 
 struct protocol::LoginRequest final : public protocol::Base<0x0002> {
+    constexpr static std::uint16_t MODE_CLASSIC = 0x0000;
+    constexpr static std::uint16_t MODE_ITCH_IO = 0x0001;
+
     std::uint32_t version {};
     std::uint64_t vdef_checksum {};
+    std::uint16_t login_mode {};
     std::uint64_t identity {};
     std::string username {};
 };
