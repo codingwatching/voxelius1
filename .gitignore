@@ -1,4 +1,8 @@
-.vscode/*
-!.vscode/c_cpp_properties.json
-build/
-source/config/cmake.hh
+/.vscode/*
+!/.vscode/c_cpp_properties.json
+/build/
+/build32/
+/build64/
+/source/config/cmake.hh
+/*.dll
+/*.so

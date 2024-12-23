@@ -6,7 +6,9 @@
 
 #include "common/resource/binary_file.hh"
 
+#include "common/cmdline.hh"
 #include "common/config.hh"
+#include "common/crc64.hh"
 #include "common/epoch.hh"
 #include "common/fstools.hh"
 
@@ -75,9 +77,6 @@ bool client_game::vertical_sync = true;
 bool client_game::world_curvature = true;
 unsigned int client_game::pixel_size = 4U;
 unsigned int client_game::fog_mode = 1U;
-
-std::string client_game::username = "player";
-std::uint64_t client_game::player_uid = UINT64_MAX;
 
 static void on_glfw_framebuffer_size(const GlfwFramebufferSizeEvent &event)
 {
@@ -173,7 +172,8 @@ void client_game::init(void)
     splash::init();
     splash::render(std::string());
 
-    client_game::player_uid = epoch::microseconds();
+    globals::client_username = "player";
+    globals::client_identity = epoch::microseconds();
 
     Config::add(globals::client_config, "game.streamer_mode", client_game::streamer_mode);
     Config::add(globals::client_config, "game.vertical_sync", client_game::vertical_sync);
@@ -181,16 +181,25 @@ void client_game::init(void)
     Config::add(globals::client_config, "game.pixel_size", client_game::pixel_size);
     Config::add(globals::client_config, "game.fog_mode", client_game::fog_mode);
 
-    Config::add(globals::client_config, "game.username", client_game::username);
-    Config::add(globals::client_config, "game.player_uid", client_game::player_uid);
+    std::string username_argument;
+
+    if(cmdline::get_value("username", username_argument)) {
+        spdlog::warn("game: using command-line for player credentials");
+        globals::client_identity = crc64::get(username_argument);
+        globals::client_username = username_argument;
+    }
+    else {
+        spdlog::warn("game: using client_config for player credentials");
+        Config::add(globals::client_config, "game.username", globals::client_username);
+        Config::add(globals::client_config, "game.identity", globals::client_identity);
+        settings::add_input(1, settings::GENERAL, "game.username", globals::client_username, true, false);
+    }
 
     settings::add_checkbox(1, settings::VIDEO_GUI, "game.streamer_mode", client_game::streamer_mode, true);
     settings::add_checkbox(5, settings::VIDEO, "game.vertical_sync", client_game::vertical_sync, false);
     settings::add_checkbox(4, settings::VIDEO, "game.world_curvature", client_game::world_curvature, true);
     settings::add_slider(1, settings::VIDEO, "game.pixel_size", client_game::pixel_size, 1U, 4U, true);
     settings::add_stepper(3, settings::VIDEO, "game.fog_mode", client_game::fog_mode, 3U, false);
-
-    settings::add_input(1, settings::GENERAL, "game.username", client_game::username, true, false);
 
     globals::client_host = enet_host_create(nullptr, 1, 1, 0, 0);
 
@@ -337,6 +346,9 @@ void client_game::init(void)
 
 void client_game::init_late(void)
 {
+    spdlog::debug("game: client username: {}", globals::client_username);
+    spdlog::debug("game: client identity: {}", globals::client_identity);
+
     language::init_late();
 
     settings::init_late();

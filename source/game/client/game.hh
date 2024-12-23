@@ -12,12 +12,6 @@ extern unsigned int fog_mode;
 
 namespace client_game
 {
-extern std::string username;
-extern std::uint64_t player_uid;
-} // namespace client_game
-
-namespace client_game
-{
 void init(void);
 void init_late(void);
 void deinit(void);

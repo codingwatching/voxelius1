@@ -59,14 +59,14 @@ static void on_login_request_packet(const protocol::LoginRequest &packet)
         return;
     }
 
-    if(Session *session = sessions::create(packet.peer, packet.player_uid, packet.username)) {
+    if(Session *session = sessions::create(packet.peer, packet.identity, packet.username)) {
         protocol::LoginResponse response = {};
         response.session_id = session->session_id;
         response.tickrate = globals::tickrate;
         response.username = session->username;
         protocol::send(packet.peer, nullptr, response);
 
-        spdlog::info("sessions: {} [{}] logged in with session_id={}", session->username, session->player_uid, session->session_id);
+        spdlog::info("sessions: {} [{}] logged in with session_id={}", session->username, session->identity, session->session_id);
 
         // FIXME: this is not a good idea
         for(auto entity : globals::registry.view<entt::entity>()) {
@@ -182,7 +182,7 @@ void sessions::init_late(void)
 
     for(unsigned int i = 0U; i < sessions::max_players; ++i) {
         sessions_vector[i].session_id = UINT16_MAX;
-        sessions_vector[i].player_uid = UINT64_MAX;
+        sessions_vector[i].identity = UINT64_MAX;
         sessions_vector[i].username = std::string();
         sessions_vector[i].player = entt::null;
         sessions_vector[i].peer = nullptr;
@@ -195,17 +195,17 @@ void sessions::deinit(void)
     sessions_vector.clear();
 }
 
-Session *sessions::create(ENetPeer *peer, std::uint64_t player_uid, const std::string &username)
+Session *sessions::create(ENetPeer *peer, std::uint64_t identity, const std::string &username)
 {
     for(unsigned int i = 0U; i < sessions::max_players; ++i) {
         if(!sessions_vector[i].peer) {
             sessions_vector[i].session_id = i;
-            sessions_vector[i].player_uid = player_uid;
+            sessions_vector[i].identity = identity;
             sessions_vector[i].username = make_unique_username(username);
             sessions_vector[i].player = entt::null;
             sessions_vector[i].peer = peer;        
 
-            sessions_map[player_uid] = &sessions_vector[i];
+            sessions_map[identity] = &sessions_vector[i];
 
             peer->data = &sessions_vector[i];
 
@@ -229,9 +229,9 @@ Session *sessions::find(std::uint16_t session_id)
     return nullptr;
 }
 
-Session *sessions::find(std::uint64_t player_uid)
+Session *sessions::find(std::uint64_t identity)
 {
-    const auto it = sessions_map.find(player_uid);
+    const auto it = sessions_map.find(identity);
     if(it != sessions_map.cend())
         return it->second;
     return nullptr;
@@ -252,10 +252,10 @@ void sessions::destroy(Session *session)
         
         globals::registry.destroy(session->player);
 
-        sessions_map.erase(session->player_uid);
+        sessions_map.erase(session->identity);
 
         session->session_id = UINT16_MAX;
-        session->player_uid = UINT64_MAX;
+        session->identity = UINT64_MAX;
         session->username = std::string();
         session->player = entt::null;
         session->peer = nullptr;

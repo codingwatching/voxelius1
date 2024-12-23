@@ -1,19 +1,8 @@
 set(LIBRARIES_INCLUDE_DIR "${CMAKE_CURRENT_LIST_DIR}/include")
-set(LIBRARIES_LICENSE_TXT "${CMAKE_CURRENT_LIST_DIR}/legal-notices.txt")
+set(LIBRARIES_LICENSE_TXT "${CMAKE_CURRENT_LIST_DIR}/LEGAL_NOTICES.txt")
 
-if(CMAKE_SIZEOF_VOID_P EQUAL 8)
-    set(LIBRARIES_BINARY_DIR_POSTFIX 64)
-else()
-    set(LIBRARIES_BINARY_DIR_POSTFIX 32)
-endif()
-
-if(WIN32)
-    set(LIBRARIES_BINARY_DIR "${CMAKE_CURRENT_LIST_DIR}/win${LIBRARIES_BINARY_DIR_POSTFIX}")
-elseif(UNIX AND NOT APPLE)
-    set(LIBRARIES_BINARY_DIR "${CMAKE_CURRENT_LIST_DIR}/linux${LIBRARIES_BINARY_DIR_POSTFIX}")
-else()
-    message(FATAL_ERROR "Uncovered platform detected")
-endif()
+add_subdirectory(win32)
+add_subdirectory(win64)
 
 add_subdirectory(source/enet)
 add_subdirectory(source/fastnoiselite)

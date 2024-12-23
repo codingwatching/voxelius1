@@ -3,7 +3,7 @@
 
 struct Session final {
     std::uint16_t session_id {};
-    std::uint64_t player_uid {};
+    std::uint64_t identity {};
     std::string username {};
     entt::entity player {};
     ENetPeer *peer {};
@@ -25,9 +25,9 @@ void deinit(void);
 
 namespace sessions
 {
-Session *create(ENetPeer *peer, std::uint64_t player_uid, const std::string &username);
+Session *create(ENetPeer *peer, std::uint64_t identity, const std::string &username);
 Session *find(std::uint16_t session_id);
-Session *find(std::uint64_t player_uid);
+Session *find(std::uint64_t identity);
 Session *find(ENetPeer *peer);
 void destroy(Session *session);
 } // namespace sessions
