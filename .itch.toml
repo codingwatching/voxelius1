@@ -3,3 +3,9 @@ name = "Play"
 path = "vclient.exe"
 platform = "windows"
 scope = "profile:me"
+
+[[actions]]
+name = "Play"
+path = "vclient"
+platform = "linux"
+scope = "profile:me"
