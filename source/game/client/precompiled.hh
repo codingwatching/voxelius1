@@ -40,7 +40,7 @@
 #include <entt/entity/registry.hpp>
 #include <entt/signal/dispatcher.hpp>
 
-#include <FastNoiseLite.h>
+#include <fastnoiselite.h>
 
 #include <GLFW/glfw3.h>
 
