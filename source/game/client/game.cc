@@ -53,11 +53,11 @@
 #include "client/world/voxel_atlas.hh"
 
 #include "client/const.hh"
+#include "client/discord_rpc.hh"
 #include "client/globals.hh"
 #include "client/keyboard.hh"
 #include "client/keynames.hh"
 #include "client/mouse.hh"
-#include "client/presence.hh"
 #include "client/receive.hh"
 #include "client/screenshot.hh"
 #include "client/session.hh"
@@ -324,7 +324,7 @@ void client_game::init(void)
 
     hotbar::init();
 
-    presence::init();
+    discord_rpc::init();
 
     globals::gui_keybind_ptr = nullptr;
     globals::gui_scale = 0U;
@@ -381,12 +381,12 @@ void client_game::init_late(void)
 
     splash::init_late();
 
-    presence::send_main_menu();
+    discord_rpc::send_main_menu();
 }
 
 void client_game::deinit(void)
 {
-    presence::deinit();
+    discord_rpc::deinit();
 
     session::deinit();
 

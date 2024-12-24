@@ -32,9 +32,9 @@
 
 #include "client/world/chunk_visibility.hh"
 
+#include "client/discord_rpc.hh"
 #include "client/game.hh"
 #include "client/globals.hh"
-#include "client/presence.hh"
 #include "client/view.hh"
 
 
@@ -53,7 +53,7 @@ static void on_login_response_packet(const protocol::LoginResponse &packet)
 
     progress::set_title("connecting.loading_world");
 
-    presence::send_playing_multiplayer();
+    discord_rpc::send_playing_multiplayer();
 }
 
 static void on_disconnect_packet(const protocol::Disconnect &packet)
@@ -87,7 +87,7 @@ static void on_disconnect_packet(const protocol::Disconnect &packet)
 
     globals::is_singleplayer = true;
 
-    presence::send_main_menu();
+    discord_rpc::send_main_menu();
 }
 
 static void on_set_voxel_packet(const protocol::SetVoxel &packet)
@@ -193,7 +193,7 @@ void session::invalidate(void)
     globals::registry.clear();
     chunk_visibility::cleanup();
 
-    presence::send_main_menu();
+    discord_rpc::send_main_menu();
 }
 
 void session::mp::connect(const std::string &host, std::uint16_t port, const std::string &password)
@@ -224,7 +224,7 @@ void session::mp::connect(const std::string &host, std::uint16_t port, const std
 
         globals::gui_screen = GUI_MESSAGE_BOX;
 
-        presence::send_main_menu();
+        discord_rpc::send_main_menu();
 
         return;
     }
@@ -251,7 +251,7 @@ void session::mp::connect(const std::string &host, std::uint16_t port, const std
 
         globals::gui_screen = GUI_PLAY_MENU;
 
-        presence::send_main_menu();
+        discord_rpc::send_main_menu();
     });
 
     globals::gui_screen = GUI_PROGRESS;
@@ -282,7 +282,7 @@ void session::mp::disconnect(const std::string &reason)
         
         client_chat::clear();
 
-        presence::send_main_menu();
+        discord_rpc::send_main_menu();
     }
 }
 
@@ -329,7 +329,7 @@ void session::sp::load_world(const std::string &universe_directory)
 
     globals::gui_screen = GUI_SCREEN_NONE;
 
-    presence::send_playing_singleplayer();
+    discord_rpc::send_playing_singleplayer();
 }
 
 void session::sp::unload_world(void)
@@ -338,5 +338,5 @@ void session::sp::unload_world(void)
 
     session::invalidate();
 
-    presence::send_main_menu();
+    discord_rpc::send_main_menu();
 }
