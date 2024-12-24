@@ -411,12 +411,12 @@ void play_menu::init(void)
             parse_hostname(item, parts[0]);
 
             if(parts.size() >= 2)
-                item->name = parts[1];
-            else item->name = DEFAULT_SERVER_NAME;
+                item->password = parts[1];
+            else item->password = std::string();
 
             if(parts.size() >= 3)
-                item->password = parts[2];
-            else item->password = std::string();
+                item->name = parts[2];
+            else item->name = DEFAULT_SERVER_NAME;
 
             servers_deque.push_back(item);
         }
@@ -438,7 +438,7 @@ void play_menu::deinit(void)
 {
     std::ostringstream stream = {};
     for(ServerStatusItem *item : servers_deque)
-        stream << fmt::format("{}:{}%{}%{}", item->peer_host, item->peer_port, item->name, item->password) << std::endl;
+        stream << fmt::format("{}:{}%{}%{}", item->peer_host, item->peer_port, item->password, item->name) << std::endl;
     fstools::write_string("servers.txt", stream.str());
 
     for(ServerStatusItem *item : servers_deque)
