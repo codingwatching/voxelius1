@@ -21,10 +21,10 @@ std::size_t globals::num_triangles = 0;
 ENetHost *globals::client_host = nullptr;
 
 ENetPeer *globals::session_peer = nullptr;
-std::uint16_t globals::session_id = UINT16_MAX;
-std::uint64_t globals::session_tick_dt = UINT64_MAX;
-std::uint64_t globals::session_send_time = UINT64_MAX;
-std::string globals::session_username = std::string();
+std::uint16_t globals::session_index = UINT16_MAX;
+std::uint64_t globals::session_identity = UINT64_MAX;
+std::uint64_t globals::session_tick_delta = UINT64_MAX;
+std::uint64_t globals::session_next_transmit = UINT64_MAX;
 
 bool globals::is_singleplayer = true;
 

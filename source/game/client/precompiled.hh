@@ -26,8 +26,6 @@
 #include <utility>
 #include <vector>
 
-#include <curl/curl.h>
-
 #include <discord_rpc.h>
 
 // FIXME: including hash_set8.hpp is fucked up whenever

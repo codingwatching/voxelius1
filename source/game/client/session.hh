@@ -10,7 +10,7 @@ void invalidate(void);
 
 namespace session::mp
 {
-void connect(const std::string &hostname, std::uint16_t port);
+void connect(const std::string &hostname, std::uint16_t port, const std::string &password);
 void disconnect(const std::string &reason);
 void send_login_request(void);
 } // namespace session::mp

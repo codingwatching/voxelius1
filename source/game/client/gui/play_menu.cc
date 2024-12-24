@@ -39,9 +39,12 @@ constexpr static const char *DEFAULT_SERVER_NAME = "Voxelius Server";
 struct ServerStatusItem final {
     std::string peer_host {};
     std::uint16_t peer_port {};
+    std::string password;
+
     std::uint16_t max_players {};
     std::uint16_t num_players {};
     std::string server_motd {};
+
     ServerStatus status {};
     std::string name {};
 };
@@ -61,6 +64,7 @@ static std::string str_server_fail = {};
 
 static std::string input_itemname = {};
 static std::string input_hostname = {};
+static std::string input_password = {};
 
 static std::deque<ServerStatusItem *> servers_deque = {};
 static ServerStatusItem *selected_server = nullptr;
@@ -94,6 +98,7 @@ static void add_new_server(void)
 
     input_itemname = DEFAULT_SERVER_NAME;
     input_hostname = std::string();
+    input_password = std::string();
 
     servers_deque.push_back(item);
     selected_server = item;
@@ -109,6 +114,8 @@ static void edit_selected_server(void)
     if(selected_server->peer_port != protocol::PORT)
         input_hostname = fmt::format("{}:{}", selected_server->peer_host, selected_server->peer_port);
     else input_hostname = selected_server->peer_host;
+
+    input_password = selected_server->password;
 
     editing_server = true;
     needs_focus = true;
@@ -137,7 +144,7 @@ static void join_selected_server(void)
 {
     if(globals::session_peer)
         return;
-    session::mp::connect(selected_server->peer_host, selected_server->peer_port);
+    session::mp::connect(selected_server->peer_host, selected_server->peer_port, selected_server->password);
 }
 
 static void on_glfw_key(const GlfwKeyEvent &event)
@@ -149,6 +156,7 @@ static void on_glfw_key(const GlfwKeyEvent &event)
                     remove_selected_server();
                 input_itemname.clear();
                 input_hostname.clear();
+                input_password.clear();
                 editing_server = false;
                 adding_server = false;
                 return;
@@ -273,6 +281,7 @@ static void layout_server_edit(ServerStatusItem *item)
 
     if(ImGui::Button("OK###play_menu.servers.submit_input", ImVec2(-1.0f, 0.0f)) || (!ignore_input && ImGui::IsKeyPressed(ImGuiKey_Enter))) {
         parse_hostname(item, input_hostname);
+        item->password = input_password;
         item->name = input_itemname;
         item->status = STATUS_INIT;
         editing_server = false;
@@ -299,8 +308,12 @@ static void layout_server_edit(ServerStatusItem *item)
         hostname_flags |= ImGuiInputTextFlags_Password;
     }
 
-    ImGui::SetNextItemWidth(-0.25f * ImGui::GetContentRegionAvail().x);
+    ImGui::SetNextItemWidth(-0.50f * ImGui::GetContentRegionAvail().x);
     ImGui::InputText("###play_menu.servers.edit_hostname", &input_hostname, hostname_flags);
+    ImGui::SameLine();
+
+    ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
+    ImGui::InputText("###play_menu.servers.edit_password", &input_password, ImGuiInputTextFlags_Password);
 }
 
 static void layout_worlds(void)
@@ -401,6 +414,10 @@ void play_menu::init(void)
                 item->name = parts[1];
             else item->name = DEFAULT_SERVER_NAME;
 
+            if(parts.size() >= 3)
+                item->password = parts[2];
+            else item->password = std::string();
+
             servers_deque.push_back(item);
         }
     }
@@ -421,7 +438,7 @@ void play_menu::deinit(void)
 {
     std::ostringstream stream = {};
     for(ServerStatusItem *item : servers_deque)
-        stream << fmt::format("{}:{}%{}", item->peer_host, item->peer_port, item->name) << std::endl;
+        stream << fmt::format("{}:{}%{}%{}", item->peer_host, item->peer_port, item->name, item->password) << std::endl;
     fstools::write_string("servers.txt", stream.str());
 
     for(ServerStatusItem *item : servers_deque)

@@ -13,8 +13,8 @@
 #include "client/gui/language.hh"
 #include "client/gui/settings.hh"
 
+#include "client/game.hh"
 #include "client/globals.hh"
-#include "client/login.hh"
 
 
 constexpr static ImGuiWindowFlags WINDOW_FLAGS = ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoDecoration;
@@ -87,12 +87,12 @@ static void on_glfw_key(const GlfwKeyEvent &event)
                     // For singleplayer, just append a new
                     // chat message into the history without any
                     // kind of packet manipulation since peer is null
-                    append_text_message(login::username, chat_input);
+                    append_text_message(client_game::username, chat_input);
                 }
                 else {
                     protocol::ChatMessage packet = {};
                     packet.type = protocol::ChatMessage::TEXT_MESSAGE;
-                    packet.sender = globals::session_username;
+                    packet.sender = client_game::username;
                     packet.message = chat_input;
                     protocol::send(globals::session_peer, nullptr, packet);
                 }

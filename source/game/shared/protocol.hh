@@ -9,7 +9,7 @@ namespace protocol
 constexpr static std::size_t MAX_CHAT = 16384;
 constexpr static std::size_t MAX_USERNAME = 64;
 constexpr static std::uint16_t PORT = 43103;
-constexpr static std::uint32_t VERSION = 11;
+constexpr static std::uint32_t VERSION = 12;
 } // namespace protocol
 
 namespace protocol
@@ -100,20 +100,16 @@ struct protocol::StatusResponse final : public protocol::Base<0x0001> {
 };
 
 struct protocol::LoginRequest final : public protocol::Base<0x0002> {
-    constexpr static std::uint16_t MODE_CLASSIC = 0x0000;
-    constexpr static std::uint16_t MODE_ITCH_IO = 0x0001;
-
     std::uint32_t version {};
     std::uint64_t vdef_checksum {};
-    std::uint16_t login_mode {};
-    std::uint64_t identity {};
+    std::uint64_t password_hash {};
     std::string username {};
 };
 
 struct protocol::LoginResponse final : public protocol::Base<0x0003> {
-    std::uint16_t session_id {};
-    std::uint16_t tickrate {};
-    std::string username {};
+    std::uint16_t client_index {};
+    std::uint64_t client_identity {};
+    std::uint16_t server_tickrate {};
 };
 
 struct protocol::Disconnect final : public protocol::Base<0x0004> {

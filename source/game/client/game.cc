@@ -56,7 +56,6 @@
 #include "client/globals.hh"
 #include "client/keyboard.hh"
 #include "client/keynames.hh"
-#include "client/login.hh"
 #include "client/mouse.hh"
 #include "client/presence.hh"
 #include "client/receive.hh"
@@ -79,6 +78,7 @@ bool client_game::vertical_sync = true;
 bool client_game::world_curvature = true;
 unsigned int client_game::pixel_size = 4U;
 unsigned int client_game::fog_mode = 1U;
+std::string client_game::username = "player";
 
 static void on_glfw_framebuffer_size(const GlfwFramebufferSizeEvent &event)
 {
@@ -179,12 +179,14 @@ void client_game::init(void)
     Config::add(globals::client_config, "game.world_curvature", client_game::world_curvature);
     Config::add(globals::client_config, "game.pixel_size", client_game::pixel_size);
     Config::add(globals::client_config, "game.fog_mode", client_game::fog_mode);
+    Config::add(globals::client_config, "game.username", client_game::username);
 
     settings::add_checkbox(1, settings::VIDEO_GUI, "game.streamer_mode", client_game::streamer_mode, true);
     settings::add_checkbox(5, settings::VIDEO, "game.vertical_sync", client_game::vertical_sync, false);
     settings::add_checkbox(4, settings::VIDEO, "game.world_curvature", client_game::world_curvature, true);
     settings::add_slider(1, settings::VIDEO, "game.pixel_size", client_game::pixel_size, 1U, 4U, true);
     settings::add_stepper(3, settings::VIDEO, "game.fog_mode", client_game::fog_mode, 3U, false);
+    settings::add_input(1, settings::GENERAL, "game.username", client_game::username, true, false);
 
     globals::client_host = enet_host_create(nullptr, 1, 1, 0, 0);
 
@@ -192,8 +194,6 @@ void client_game::init(void)
         spdlog::critical("game: unable to setup an ENet host");
         std::terminate();
     }
-
-    login::init();
 
     language::init();
 
@@ -335,8 +335,6 @@ void client_game::init(void)
 
 void client_game::init_late(void)
 {
-    login::init_late();
-
     language::init_late();
 
     settings::init_late();
@@ -484,8 +482,8 @@ void client_game::update_late(void)
         }
     }
 
-    if(globals::session_peer && (globals::curtime >= globals::session_send_time)) {
-        globals::session_send_time = globals::curtime + globals::session_tick_dt;
+    if(globals::session_peer && (globals::curtime >= globals::session_next_transmit)) {
+        globals::session_next_transmit = globals::curtime + globals::session_tick_delta;
 
         if(globals::registry.valid(globals::player)) {
             protocol::send_entity_head(globals::session_peer, nullptr, globals::player);

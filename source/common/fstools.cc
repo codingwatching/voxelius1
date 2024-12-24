@@ -78,6 +78,8 @@ bool fstools::read_line(PHYSFS_File *file, std::string &line)
 
         if(temp[0] == '\n')
             break;
+        if(temp[0] == '\r')
+            continue;
         line.append(temp);
     }
 

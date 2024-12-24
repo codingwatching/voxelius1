@@ -5,6 +5,9 @@
 #include "mathlib/constexpr.hh"
 
 #include "common/config.hh"
+#include "common/crc64.hh"
+#include "common/fstools.hh"
+#include "common/strtools.hh"
 
 #include "shared/entity/head.hh"
 #include "shared/entity/player.hh"
@@ -23,27 +26,20 @@
 #include "server/globals.hh"
 
 
-unsigned int sessions::max_players = 16U;
+constexpr static char WHITELIST_SEPARATOR = ':';
+
+bool sessions::whitelist_enabled = false;
+unsigned int sessions::max_players = 8U;
 unsigned int sessions::num_players = 0U;
 
-static bool allow_classic_logins = true;
-static bool allow_itch_io_logins = true;
+static std::string server_password_str = std::string();
+static std::uint64_t server_password_hash = UINT64_MAX;
+static emhash8::HashMap<std::string, std::uint64_t> whitelist = {};
+static std::string whitelist_filename = std::string("whitelist.txt");
 
-static std::unordered_map<std::uint64_t, Session *> sessions_map = {};
+static emhash8::HashMap<std::string, Session *> username_map = {};
+static emhash8::HashMap<std::uint64_t, Session *> identity_map = {};
 static std::vector<Session> sessions_vector = {};
-
-static std::string make_unique_username(const std::string &username)
-{
-    for(const Session &session : sessions_vector) {
-        if(session.peer) {
-            if(session.username.compare(username))
-                continue;
-            return make_unique_username(username + std::string("(1)"));
-        }
-    }
-
-    return username;
-}
 
 static void on_login_request_packet(const protocol::LoginRequest &packet)
 {
@@ -57,61 +53,86 @@ static void on_login_request_packet(const protocol::LoginRequest &packet)
         return;
     }
 
+    // FIXME: calculate voxel registry checksum ahead of time
+    // instead of figuring it out every time a new player connects
     if(packet.vdef_checksum != vdef::calc_checksum()) {
         protocol::send_disconnect(packet.peer, nullptr, "protocol.vdef_checksum_mismatch");
         return;
     }
 
-    if((packet.login_mode == protocol::LoginRequest::MODE_CLASSIC) && !(allow_classic_logins)) {
-        protocol::send_disconnect(packet.peer, nullptr, "protocol.login_mode_rejected");
+    if(strtools::contains(packet.username, WHITELIST_SEPARATOR)) {
+        protocol::send_disconnect(packet.peer, nullptr, "protocol.invalid_username");
         return;
     }
 
-    if((packet.login_mode == protocol::LoginRequest::MODE_ITCH_IO) && !(allow_itch_io_logins)) {
-        protocol::send_disconnect(packet.peer, nullptr, "protocol.login_mode_rejected");
+    // Don't assign new usernames and just kick the player if
+    // an another client using the same username is already connected
+    // and playing; since we have a whitelist, adding "(1)" isn't feasible anymore
+    if(username_map.contains(packet.username)) {
+        protocol::send_disconnect(packet.peer, nullptr, "protocol.username_taken");
         return;
     }
 
-    if(Session *session = sessions::create(packet.peer, packet.identity, packet.username)) {
+    if(sessions::whitelist_enabled) {
+        const auto it = whitelist.find(packet.username);
+
+        if(it == whitelist.cend()) {
+            protocol::send_disconnect(packet.peer, nullptr, "protocol.not_whitelisted");
+            return;
+        }
+
+        if(packet.password_hash != it->second) {
+            protocol::send_disconnect(packet.peer, nullptr, "protocol.password_incorrect");
+            return;
+        }
+    }
+    else if(packet.password_hash != server_password_hash) {
+        protocol::send_disconnect(packet.peer, nullptr, "protocol.password_incorrect");
+        return;
+    }
+
+    if(Session *session = sessions::create(packet.peer, packet.username)) {
         protocol::LoginResponse response = {};
-        response.session_id = session->session_id;
-        response.tickrate = globals::tickrate;
-        response.username = session->username;
+        response.client_index = session->client_index;
+        response.client_identity = session->client_identity;
+        response.server_tickrate = globals::tickrate;
         protocol::send(packet.peer, nullptr, response);
 
-        spdlog::info("sessions: {} [{}] logged in with session_id={}", session->username, session->identity, session->session_id);
+        spdlog::info("sessions: {} [{}] logged in with client_index={}", session->client_username, session->client_identity, session->client_index);
 
-        // FIXME: this is not a good idea
+        // FIXME: only send entities that are present within the current
+        // player's view bounding box; this also would mean we're not sending
+        // anything here and just straight up spawing the player and await them
+        // to receive all the chunks and entites they feel like requesting
         for(auto entity : globals::registry.view<entt::entity>()) {
-            protocol::send_chunk_voxels(session->peer, nullptr, entity);
             protocol::send_entity_head(session->peer, nullptr, entity);
             protocol::send_entity_transform(session->peer, nullptr, entity);
             protocol::send_entity_velocity(session->peer, nullptr, entity);
             protocol::send_entity_player(session->peer, nullptr, entity);
         }
 
-        session->player = globals::registry.create();
-        globals::registry.emplace<HeadComponent>(session->player, HeadComponent());
-        globals::registry.emplace<PlayerComponent>(session->player, PlayerComponent());
-        globals::registry.emplace<TransformComponent>(session->player, TransformComponent());
-        globals::registry.emplace<VelocityComponent>(session->player, VelocityComponent());
+        session->player_entity = globals::registry.create();
+        globals::registry.emplace<HeadComponent>(session->player_entity, HeadComponent());
+        globals::registry.emplace<PlayerComponent>(session->player_entity, PlayerComponent());
+        globals::registry.emplace<TransformComponent>(session->player_entity, TransformComponent());
+        globals::registry.emplace<VelocityComponent>(session->player_entity, VelocityComponent());
 
         // The player entity is to be spawned in the world the last;
         // We don't want to interact with the still not-loaded world!
-        protocol::send_entity_head(nullptr, globals::server_host, session->player);
-        protocol::send_entity_transform(nullptr, globals::server_host, session->player);
-        protocol::send_entity_velocity(nullptr, globals::server_host, session->player);
-        protocol::send_entity_player(nullptr, globals::server_host, session->player);
+        protocol::send_entity_head(nullptr, globals::server_host, session->player_entity);
+        protocol::send_entity_transform(nullptr, globals::server_host, session->player_entity);
+        protocol::send_entity_velocity(nullptr, globals::server_host, session->player_entity);
+        protocol::send_entity_player(nullptr, globals::server_host, session->player_entity);
 
         // SpawnPlayer serves a different purpose compared to EntityPlayer
         // The latter is used to construct entities (as in "attach a component")
         // whilst the SpawnPlayer packet is used to notify client-side that the
         // entity identifier in the packet is to be treated as the local player entity
-        protocol::send_spawn_player(session->peer, nullptr, session->player);
+        protocol::send_spawn_player(session->peer, nullptr, session->player_entity);
 
         protocol::ChatMessage message = {};
         message.type = protocol::ChatMessage::PLAYER_JOIN;
-        message.sender = session->username;
+        message.sender = session->client_username;
         message.message = std::string();
         protocol::send(nullptr, globals::server_host, message);
 
@@ -120,7 +141,7 @@ static void on_login_request_packet(const protocol::LoginRequest &packet)
         return;
     }
 
-    protocol::send_disconnect(packet.peer, nullptr, "protocol.max_players");
+    protocol::send_disconnect(packet.peer, nullptr, "protocol.server_full");
 }
 
 static void on_disconnect_packet(const protocol::Disconnect &packet)
@@ -128,11 +149,11 @@ static void on_disconnect_packet(const protocol::Disconnect &packet)
     if(Session *session = sessions::find(packet.peer)) {
         protocol::ChatMessage message = {};
         message.type = protocol::ChatMessage::PLAYER_LEAVE;
-        message.sender = session->username;
+        message.sender = session->client_username;
         message.message = packet.reason;
         protocol::send(session->peer, globals::server_host, message);
 
-        spdlog::info("{} disconnected ({})", session->username, packet.reason);
+        spdlog::info("{} disconnected ({})", session->client_username, packet.reason);
 
         sessions::destroy(session);
         sessions::refresh_player_list();
@@ -174,10 +195,10 @@ static void on_destroy_entity(const entt::registry &registry, entt::entity entit
 
 void sessions::init(void)
 {
+    Config::add(globals::server_config, "sessions.whitelist_enabled", sessions::whitelist_enabled);
+    Config::add(globals::server_config, "sessions.whitelist_filename", whitelist_filename);
     Config::add(globals::server_config, "sessions.max_players", sessions::max_players);
-
-    Config::add(globals::server_config, "sessions.allow_classic", allow_classic_logins);
-    Config::add(globals::server_config, "sessions.allow_itch_io", allow_itch_io_logins);
+    Config::add(globals::server_config, "sessions.password", server_password_str);
 
     globals::dispatcher.sink<protocol::LoginRequest>().connect<&on_login_request_packet>();
     globals::dispatcher.sink<protocol::Disconnect>().connect<&on_disconnect_packet>();
@@ -194,44 +215,69 @@ void sessions::init_late(void)
     sessions::max_players = cxpr::clamp<unsigned int>(sessions::max_players, 1U, UINT16_MAX);
     sessions::num_players = 0U;
 
-    bool allow_anything = false;
-    allow_anything = allow_anything || allow_classic_logins;
-    allow_anything = allow_anything || allow_itch_io_logins;
+    server_password_hash = crc64::get(server_password_str);
 
-    if(!allow_anything) {
-        spdlog::critical("sessions: server doesn't accept any connections");
-        spdlog::critical("sessions: please set at least one sessions.allow_xxxx value in server.conf to true");
-        std::terminate();
-    }
-
+    whitelist.clear();
+    username_map.clear();
+    identity_map.clear();
     sessions_vector.resize(sessions::max_players, Session());
 
+    if(auto whitelist_file = PHYSFS_openRead("whitelist.txt")) {
+        std::string whitelist_line = {};
+
+        while(fstools::read_line(whitelist_file, whitelist_line)) {
+            if(strtools::is_empty_or_whitespace(whitelist_line)) {
+                // Ignore empty and blank lines
+                continue;
+            }
+
+            const auto location = whitelist_line.find_last_of(WHITELIST_SEPARATOR);
+
+            if(location == std::string::npos) {
+                // Allow the user to use a master server password to login;
+                // though being less secure, it makes sense to implement
+                whitelist.insert_or_assign(whitelist_line, crc64::get(server_password_str));
+            }
+            else {
+                const auto username = whitelist_line.substr(0, location);
+                const auto password = whitelist_line.substr(location + 1);
+                whitelist.insert_or_assign(username, crc64::get(password));
+            }
+        }
+
+        PHYSFS_close(whitelist_file);
+    }
+
     for(unsigned int i = 0U; i < sessions::max_players; ++i) {
-        sessions_vector[i].session_id = UINT16_MAX;
-        sessions_vector[i].identity = UINT64_MAX;
-        sessions_vector[i].username = std::string();
-        sessions_vector[i].player = entt::null;
+        sessions_vector[i].client_index = UINT16_MAX;
+        sessions_vector[i].client_identity = UINT64_MAX;
+        sessions_vector[i].client_username = std::string();
+        sessions_vector[i].player_entity = entt::null;
         sessions_vector[i].peer = nullptr;
     }
 }
 
 void sessions::deinit(void)
 {
-    sessions_map.clear();
+    username_map.clear();
+    identity_map.clear();
     sessions_vector.clear();
 }
 
-Session *sessions::create(ENetPeer *peer, std::uint64_t identity, const std::string &username)
+Session *sessions::create(ENetPeer *peer, const std::string &client_username)
 {
     for(unsigned int i = 0U; i < sessions::max_players; ++i) {
         if(!sessions_vector[i].peer) {
-            sessions_vector[i].session_id = i;
-            sessions_vector[i].identity = identity;
-            sessions_vector[i].username = make_unique_username(username);
-            sessions_vector[i].player = entt::null;
+            std::uint64_t client_identity = crc64::get(client_username);
+
+            sessions_vector[i].client_index = i;
+            sessions_vector[i].client_identity = client_identity;
+            sessions_vector[i].client_username = client_username;
+            sessions_vector[i].player_entity = entt::null;
             sessions_vector[i].peer = peer;        
 
-            sessions_map[identity] = &sessions_vector[i];
+            username_map[client_username] = &sessions_vector[i];
+            identity_map[client_identity] = &sessions_vector[i];
 
             peer->data = &sessions_vector[i];
 
@@ -244,21 +290,29 @@ Session *sessions::create(ENetPeer *peer, std::uint64_t identity, const std::str
     return nullptr;
 }
 
-Session *sessions::find(std::uint16_t session_id)
+Session *sessions::find(const std::string &client_username)
 {
-    if(session_id < sessions_vector.size()) {
-        if(!sessions_vector[session_id].peer)
+    const auto it = username_map.find(client_username);
+    if(it != username_map.cend())
+        return it->second;
+    return nullptr;
+}
+
+Session *sessions::find(std::uint16_t client_index)
+{
+    if(client_index < sessions_vector.size()) {
+        if(!sessions_vector[client_index].peer)
             return nullptr;
-        return &sessions_vector[session_id];
+        return &sessions_vector[client_index];
     }
 
     return nullptr;
 }
 
-Session *sessions::find(std::uint64_t identity)
+Session *sessions::find(std::uint64_t client_identity)
 {
-    const auto it = sessions_map.find(identity);
-    if(it != sessions_map.cend())
+    const auto it = identity_map.find(client_identity);
+    if(it != identity_map.cend())
         return it->second;
     return nullptr;
 }
@@ -276,14 +330,15 @@ void sessions::destroy(Session *session)
             session->peer->data = nullptr;
         }
         
-        globals::registry.destroy(session->player);
+        globals::registry.destroy(session->player_entity);
 
-        sessions_map.erase(session->identity);
+        username_map.erase(session->client_username);
+        identity_map.erase(session->client_identity);
 
-        session->session_id = UINT16_MAX;
-        session->identity = UINT64_MAX;
-        session->username = std::string();
-        session->player = entt::null;
+        session->client_index = UINT16_MAX;
+        session->client_identity = UINT64_MAX;
+        session->client_username = std::string();
+        session->player_entity = entt::null;
         session->peer = nullptr;
 
         sessions::num_players -= 1U;
@@ -297,7 +352,7 @@ void sessions::refresh_player_list(void)
     for(std::size_t i = 0; i < sessions::max_players; ++i) {
         if(!sessions_vector[i].peer)
             continue;
-        packet.names.push_back(sessions_vector[i].username);
+        packet.names.push_back(sessions_vector[i].client_username);
     }
 
     protocol::send(nullptr, globals::server_host, packet);

@@ -10,8 +10,8 @@
 static void on_chat_message_packet(const protocol::ChatMessage &packet)
 {
     if(packet.type == protocol::ChatMessage::TEXT_MESSAGE) {
-        if(packet.peer->data)
-            server_chat::broadcast(packet.message, reinterpret_cast<const Session *>(packet.peer->data)->username);
+        if(auto session = sessions::find(packet.peer))
+            server_chat::broadcast(packet.message, session->client_username);
         else server_chat::broadcast(packet.message, packet.sender);
     }
 }
@@ -33,6 +33,7 @@ void server_chat::broadcast(const std::string &message, const std::string &sende
     packet.message = message;
     packet.sender = sender;
     protocol::send(nullptr, globals::server_host, packet);
+
     spdlog::info("[{}] {}", sender, message);
 }
 

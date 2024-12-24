@@ -3,6 +3,7 @@
 #include "client/session.hh"
 
 #include "common/config.hh"
+#include "common/crc64.hh"
 
 #include "shared/entity/head.hh"
 #include "shared/entity/player.hh"
@@ -31,22 +32,24 @@
 
 #include "client/world/chunk_visibility.hh"
 
+#include "client/game.hh"
 #include "client/globals.hh"
-#include "client/login.hh"
 #include "client/presence.hh"
 #include "client/view.hh"
 
 
+static std::uint64_t server_password_hash = UINT64_MAX;
+
 static void on_login_response_packet(const protocol::LoginResponse &packet)
 {
-    spdlog::info("session: assigned session_id={}", packet.session_id);
-    spdlog::info("session: assigned username: {}", packet.username);
-    spdlog::info("session: server ticks at {} TPS", packet.tickrate);
-    
-    globals::session_id = packet.session_id;
-    globals::session_tick_dt = static_cast<std::uint64_t>(1000000.0f / static_cast<float>(cxpr::max<std::uint16_t>(10, packet.tickrate)));
-    globals::session_send_time = 0;
-    globals::session_username = packet.username;
+    spdlog::info("session: assigned client_index={}", packet.client_index);
+    spdlog::info("session: assigned client_identity={}", packet.client_identity);
+    spdlog::info("session: server ticks at {} TPS", packet.server_tickrate);
+
+    globals::session_index = packet.client_index;
+    globals::session_identity = packet.client_identity;
+    globals::session_tick_delta = static_cast<std::uint64_t>(1000000.0f / static_cast<float>(cxpr::max<std::uint16_t>(10, packet.server_tickrate)));
+    globals::session_next_transmit = UINT64_C(0);
 
     progress::set_title("connecting.loading_world");
 
@@ -62,10 +65,12 @@ static void on_disconnect_packet(const protocol::Disconnect &packet)
     client_chat::clear();
 
     globals::session_peer = nullptr;
-    globals::session_id = UINT16_MAX;
-    globals::session_tick_dt = UINT64_MAX;
-    globals::session_send_time = UINT64_MAX;
-    globals::session_username = std::string();
+    globals::session_index = UINT16_MAX;
+    globals::session_identity = UINT64_MAX;
+    globals::session_tick_delta = UINT64_MAX;
+    globals::session_next_transmit = UINT64_MAX;
+
+    server_password_hash = UINT64_MAX;
 
     globals::player = entt::null;
     globals::registry.clear();
@@ -130,10 +135,12 @@ static void on_voxel_set(const VoxelSetEvent &event)
 void session::init(void)
 {
     globals::session_peer = nullptr;
-    globals::session_id = UINT16_MAX;
-    globals::session_tick_dt = UINT64_MAX;
-    globals::session_send_time = UINT64_MAX;
-    globals::session_username = std::string();
+    globals::session_index = UINT16_MAX;
+    globals::session_identity = UINT64_MAX;
+    globals::session_tick_delta = UINT64_MAX;
+    globals::session_next_transmit = UINT64_MAX;
+
+    server_password_hash = UINT64_MAX;
     
     globals::is_singleplayer = true;
 
@@ -152,7 +159,8 @@ void session::deinit(void)
     }
 
     session::mp::disconnect("protocol.client_shutdown");
-    globals::session_send_time = UINT64_MAX;
+
+    globals::session_next_transmit = UINT64_MAX;
 }
 
 void session::invalidate(void)
@@ -173,10 +181,12 @@ void session::invalidate(void)
     client_chat::clear();
 
     globals::session_peer = nullptr;
-    globals::session_id = UINT16_MAX;
-    globals::session_tick_dt = UINT64_MAX;
-    globals::session_send_time = UINT64_MAX;
-    globals::session_username = std::string();
+    globals::session_index = UINT16_MAX;
+    globals::session_identity = UINT64_MAX;
+    globals::session_tick_delta = UINT64_MAX;
+    globals::session_next_transmit = UINT64_MAX;
+
+    server_password_hash = UINT64_MAX;
 
     if(globals::registry.valid(globals::player))
         globals::player = entt::null;
@@ -186,21 +196,25 @@ void session::invalidate(void)
     presence::send_main_menu();
 }
 
-void session::mp::connect(const std::string &host, std::uint16_t port)
+void session::mp::connect(const std::string &host, std::uint16_t port, const std::string &password)
 {
     ENetAddress address = {};
     enet_address_set_host(&address, host.c_str());
     address.port = port;
     
     globals::session_peer = enet_host_connect(globals::client_host, &address, 1, 0);
-    globals::session_id = UINT16_MAX;
-    globals::session_tick_dt = UINT64_MAX;
-    globals::session_send_time = UINT64_MAX;
-    globals::session_username = std::string();
+    globals::session_index = UINT16_MAX;
+    globals::session_identity = UINT64_MAX;
+    globals::session_tick_delta = UINT64_MAX;
+    globals::session_next_transmit = UINT64_MAX;
+
+    server_password_hash = crc64::get(password);
 
     globals::is_singleplayer = false;
 
     if(!globals::session_peer) {
+        server_password_hash = UINT64_MAX;
+
         message_box::reset();
         message_box::set_title("disconnected.disconnected");
         message_box::set_subtitle("enet.peer_connection_failed");
@@ -221,10 +235,12 @@ void session::mp::connect(const std::string &host, std::uint16_t port)
         enet_peer_disconnect(globals::session_peer, 0);
 
         globals::session_peer = nullptr;
-        globals::session_id = UINT16_MAX;
-        globals::session_tick_dt = UINT64_MAX;
-        globals::session_send_time = UINT64_MAX;
-        globals::session_username = std::string();
+        globals::session_index = UINT16_MAX;
+        globals::session_identity = UINT64_MAX;
+        globals::session_tick_delta = UINT64_MAX;
+        globals::session_next_transmit = UINT64_MAX;
+
+        server_password_hash = UINT64_MAX;
 
         globals::is_singleplayer = true;
 
@@ -251,9 +267,12 @@ void session::mp::disconnect(const std::string &reason)
         enet_peer_reset(globals::session_peer);
 
         globals::session_peer = nullptr;
-        globals::session_id = UINT16_MAX;
-        globals::session_tick_dt = UINT64_MAX;
-        globals::session_username = std::string();
+        globals::session_index = UINT16_MAX;
+        globals::session_identity = UINT64_MAX;
+        globals::session_tick_delta = UINT64_MAX;
+        globals::session_next_transmit = UINT64_MAX;
+
+        server_password_hash = UINT64_MAX;
 
         globals::is_singleplayer = true;
 
@@ -272,11 +291,12 @@ void session::mp::send_login_request(void)
     protocol::LoginRequest packet = {};
     packet.version = protocol::VERSION;
     packet.vdef_checksum = vdef::calc_checksum();
-    packet.login_mode = login::mode;
-    packet.identity = login::identity;
-    packet.username = login::username;
+    packet.password_hash = server_password_hash;
+    packet.username = client_game::username;
     protocol::send(globals::session_peer, nullptr, packet);
     
+    server_password_hash = UINT64_MAX;
+
     progress::set_title("connecting.logging_in");
     globals::gui_screen = GUI_PROGRESS;
 }

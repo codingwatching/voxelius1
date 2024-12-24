@@ -21,15 +21,15 @@
 static void on_entity_transform_packet(const protocol::EntityTransform &packet)
 {
     if(Session *session = sessions::find(packet.peer)) {
-        if(globals::registry.valid(session->player)) {
-            auto &transform = globals::registry.get_or_emplace<TransformComponent>(session->player);
+        if(globals::registry.valid(session->player_entity)) {
+            auto &transform = globals::registry.get_or_emplace<TransformComponent>(session->player_entity);
             transform.angles = packet.angles;
             transform.position = packet.coord;
 
             // Propagate changes to the rest of the world
             // except the peer that has sent the packet in the first place
             // UNDONE: pass nullptr instead of packet.peer when we want to correct the client
-            protocol::send_entity_transform(packet.peer, globals::server_host, session->player);
+            protocol::send_entity_transform(packet.peer, globals::server_host, session->player_entity);
         }
     }
 }
@@ -37,15 +37,15 @@ static void on_entity_transform_packet(const protocol::EntityTransform &packet)
 static void on_entity_velocity_packet(const protocol::EntityVelocity &packet)
 {
     if(Session *session = sessions::find(packet.peer)) {
-        if(globals::registry.valid(session->player)) {
-            auto &velocity = globals::registry.get_or_emplace<VelocityComponent>(session->player);
+        if(globals::registry.valid(session->player_entity)) {
+            auto &velocity = globals::registry.get_or_emplace<VelocityComponent>(session->player_entity);
             velocity.angular = packet.angular;
             velocity.linear = packet.linear;
 
             // Propagate changes to the rest of the world
             // except the peer that has sent the packet in the first place
             // UNDONE: pass nullptr instead of packet.peer when we want to correct the client
-            protocol::send_entity_velocity(packet.peer, globals::server_host, session->player);
+            protocol::send_entity_velocity(packet.peer, globals::server_host, session->player_entity);
         }
     }
 }
@@ -53,14 +53,14 @@ static void on_entity_velocity_packet(const protocol::EntityVelocity &packet)
 static void on_entity_head_packet(const protocol::EntityHead &packet)
 {
     if(Session *session = sessions::find(packet.peer)) {
-        if(globals::registry.valid(session->player)) {
-            auto &transform = globals::registry.get_or_emplace<HeadComponent>(session->player);
+        if(globals::registry.valid(session->player_entity)) {
+            auto &transform = globals::registry.get_or_emplace<HeadComponent>(session->player_entity);
             transform.angles = packet.angles;
 
             // Propagate changes to the rest of the world
             // except the peer that has sent the packet in the first place
             // UNDONE: pass nullptr instead of packet.peer when we want to correct the client
-            protocol::send_entity_head(packet.peer, globals::server_host, session->player);
+            protocol::send_entity_head(packet.peer, globals::server_host, session->player_entity);
         }
     }
 }
@@ -86,13 +86,13 @@ static void on_set_voxel_packet(const protocol::SetVoxel &packet)
 static void on_request_chunk_packet(const protocol::RequestChunk &packet)
 {
     if(auto session = reinterpret_cast<const Session *>(packet.peer->data)) {
-        if(!globals::registry.valid(session->player)) {
+        if(!globals::registry.valid(session->player_entity)) {
             // De-spawned sessions cannot request
             // chunks from the server; that's cheating!!!
             return;
         }
 
-        if(auto transform = globals::registry.try_get<TransformComponent>(session->player)) {
+        if(auto transform = globals::registry.try_get<TransformComponent>(session->player_entity)) {
             auto view_box = Box3base<ChunkCoord::value_type>();
             view_box.min = transform->position.chunk - server_game::view_distance;
             view_box.max = transform->position.chunk + server_game::view_distance;

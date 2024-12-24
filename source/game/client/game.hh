@@ -8,6 +8,7 @@ extern bool vertical_sync;
 extern bool world_curvature;
 extern unsigned int pixel_size;
 extern unsigned int fog_mode;
+extern std::string username;
 } // namespace client_game
 
 namespace client_game
