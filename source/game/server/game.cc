@@ -6,6 +6,7 @@
 
 #include "common/cmdline.hh"
 #include "common/config.hh"
+#include "common/crc64.hh"
 #include "common/epoch.hh"
 
 #include "shared/entity/head.hh"
@@ -28,12 +29,15 @@
 #include "server/receive.hh"
 #include "server/sessions.hh"
 #include "server/status.hh"
+#include "server/whitelist.hh"
 
 
 unsigned int server_game::view_distance = 4U;
+std::uint64_t server_game::password_hash = UINT64_MAX;
 
 static unsigned int listen_port = protocol::PORT;
 static unsigned int status_peers = 4U;
+static std::string password_string = std::string();
 
 static std::uint64_t worldgen_seed = UINT64_C(42);
 
@@ -41,11 +45,14 @@ void server_game::init(void)
 {
     Config::add(globals::server_config, "game.listen_port", listen_port);
     Config::add(globals::server_config, "game.status_peers", status_peers);
+    Config::add(globals::server_config, "game.password", password_string);
     Config::add(globals::server_config, "game.view_distance", server_game::view_distance);
 
     Config::add(globals::server_config, "worldgen.seed", worldgen_seed);
 
     sessions::init();
+
+    whitelist::init();
 
     motd::init("motds/server.txt");
     status::init();
@@ -61,8 +68,11 @@ void server_game::init(void)
 void server_game::init_late(void)
 {
     server_game::view_distance = cxpr::clamp(server_game::view_distance, 2U, 32U);
+    server_game::password_hash = crc64::get(password_string);
 
     sessions::init_late();
+
+    whitelist::init_late();
 
     listen_port = cxpr::clamp<unsigned int>(listen_port, 1024U, UINT16_MAX);
     status_peers = cxpr::clamp<unsigned int>(status_peers, 2U, 16U);
@@ -95,6 +105,8 @@ void server_game::init_late(void)
 void server_game::deinit(void)
 {
     protocol::send_disconnect(nullptr, globals::server_host, "protocol.server_shutdown");
+
+    whitelist::deinit();
 
     sessions::deinit();
 

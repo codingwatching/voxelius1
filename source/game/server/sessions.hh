@@ -3,7 +3,6 @@
 
 namespace sessions
 {
-extern bool whitelist_enabled;
 extern unsigned int max_players;
 extern unsigned int num_players;
 } // namespace sessions

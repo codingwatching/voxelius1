@@ -13,7 +13,9 @@ if(BUILD_SERVER)
         "${CMAKE_CURRENT_LIST_DIR}/sessions.cc"
         "${CMAKE_CURRENT_LIST_DIR}/sessions.hh"
         "${CMAKE_CURRENT_LIST_DIR}/status.cc"
-        "${CMAKE_CURRENT_LIST_DIR}/status.hh")
+        "${CMAKE_CURRENT_LIST_DIR}/status.hh"
+        "${CMAKE_CURRENT_LIST_DIR}/whitelist.cc"
+        "${CMAKE_CURRENT_LIST_DIR}/whitelist.hh")
     target_include_directories(vserver PRIVATE "${PROJECT_SOURCE_DIR}/source")
     target_include_directories(vserver PRIVATE "${PROJECT_SOURCE_DIR}/source/game")
     target_precompile_headers(vserver PRIVATE "${CMAKE_CURRENT_LIST_DIR}/precompiled.hh")

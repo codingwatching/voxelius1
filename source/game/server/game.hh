@@ -4,6 +4,7 @@
 namespace server_game
 {
 extern unsigned int view_distance;
+extern std::uint64_t password_hash;
 } // namespace server_game
 
 namespace server_game

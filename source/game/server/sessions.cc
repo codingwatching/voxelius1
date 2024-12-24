@@ -23,19 +23,13 @@
 
 #include "shared/protocol.hh"
 
+#include "server/game.hh"
 #include "server/globals.hh"
+#include "server/whitelist.hh"
 
 
-constexpr static char WHITELIST_SEPARATOR = ':';
-
-bool sessions::whitelist_enabled = false;
 unsigned int sessions::max_players = 8U;
 unsigned int sessions::num_players = 0U;
-
-static std::string server_password_str = std::string();
-static std::uint64_t server_password_hash = UINT64_MAX;
-static emhash8::HashMap<std::string, std::uint64_t> whitelist = {};
-static std::string whitelist_filename = std::string("whitelist.txt");
 
 static emhash8::HashMap<std::string, Session *> username_map = {};
 static emhash8::HashMap<std::uint64_t, Session *> identity_map = {};
@@ -60,11 +54,6 @@ static void on_login_request_packet(const protocol::LoginRequest &packet)
         return;
     }
 
-    if(strtools::contains(packet.username, WHITELIST_SEPARATOR)) {
-        protocol::send_disconnect(packet.peer, nullptr, "protocol.invalid_username");
-        return;
-    }
-
     // Don't assign new usernames and just kick the player if
     // an another client using the same username is already connected
     // and playing; since we have a whitelist, adding "(1)" isn't feasible anymore
@@ -73,20 +62,18 @@ static void on_login_request_packet(const protocol::LoginRequest &packet)
         return;
     }
 
-    if(sessions::whitelist_enabled) {
-        const auto it = whitelist.find(packet.username);
-
-        if(it == whitelist.cend()) {
+    if(whitelist::enabled) {
+        if(!whitelist::contains(packet.username)) {
             protocol::send_disconnect(packet.peer, nullptr, "protocol.not_whitelisted");
             return;
         }
 
-        if(packet.password_hash != it->second) {
+        if(!whitelist::matches(packet.username, packet.password_hash)) {
             protocol::send_disconnect(packet.peer, nullptr, "protocol.password_incorrect");
             return;
         }
     }
-    else if(packet.password_hash != server_password_hash) {
+    else if(packet.password_hash != server_game::password_hash) {
         protocol::send_disconnect(packet.peer, nullptr, "protocol.password_incorrect");
         return;
     }
@@ -195,10 +182,7 @@ static void on_destroy_entity(const entt::registry &registry, entt::entity entit
 
 void sessions::init(void)
 {
-    Config::add(globals::server_config, "sessions.whitelist_enabled", sessions::whitelist_enabled);
-    Config::add(globals::server_config, "sessions.whitelist_filename", whitelist_filename);
     Config::add(globals::server_config, "sessions.max_players", sessions::max_players);
-    Config::add(globals::server_config, "sessions.password", server_password_str);
 
     globals::dispatcher.sink<protocol::LoginRequest>().connect<&on_login_request_packet>();
     globals::dispatcher.sink<protocol::Disconnect>().connect<&on_disconnect_packet>();
@@ -215,38 +199,9 @@ void sessions::init_late(void)
     sessions::max_players = cxpr::clamp<unsigned int>(sessions::max_players, 1U, UINT16_MAX);
     sessions::num_players = 0U;
 
-    server_password_hash = crc64::get(server_password_str);
-
-    whitelist.clear();
     username_map.clear();
     identity_map.clear();
     sessions_vector.resize(sessions::max_players, Session());
-
-    if(auto whitelist_file = PHYSFS_openRead("whitelist.txt")) {
-        std::string whitelist_line = {};
-
-        while(fstools::read_line(whitelist_file, whitelist_line)) {
-            if(strtools::is_empty_or_whitespace(whitelist_line)) {
-                // Ignore empty and blank lines
-                continue;
-            }
-
-            const auto location = whitelist_line.find_last_of(WHITELIST_SEPARATOR);
-
-            if(location == std::string::npos) {
-                // Allow the user to use a master server password to login;
-                // though being less secure, it makes sense to implement
-                whitelist.insert_or_assign(whitelist_line, crc64::get(server_password_str));
-            }
-            else {
-                const auto username = whitelist_line.substr(0, location);
-                const auto password = whitelist_line.substr(location + 1);
-                whitelist.insert_or_assign(username, crc64::get(password));
-            }
-        }
-
-        PHYSFS_close(whitelist_file);
-    }
 
     for(unsigned int i = 0U; i < sessions::max_players; ++i) {
         sessions_vector[i].client_index = UINT16_MAX;
